@@ -33,6 +33,19 @@
       debug:
         var: duplicate_check.stdout
 
+    - name: Show all matching entries (for debug)
+      shell: |
+        mysql -N -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "
+        SELECT Server_Name, Error_Message, created_at
+        FROM Error_Table
+        WHERE LOWER(Server_Name) = LOWER('{{ server_name }}')
+        AND LOWER(Error_Message) = LOWER('{{ error_msg }}');"
+      register: full_match_check
+
+    - name: Print all matching entries
+      debug:
+        var: full_match_check.stdout_lines
+        
     - name: Show found status
       debug:
         msg: "Error already exists for the server {{ server_name }}"
