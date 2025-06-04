@@ -35,7 +35,7 @@
     - name: Show found status
       debug:
         msg: "Error already exists for the server {{ server_name }}"
-      when: when: duplicate_check.stdout | int > 0
+      when: duplicate_check.stdout | int > 0
       
     - name: Insert entry into MySQL database
       ansible.builtin.shell: |
