@@ -10,56 +10,35 @@
     server_name: "nginxserver.demolab.com"
     error_msg: "Nginx service is not running."
     # This will be dynamically templated during playbook execution
-    sql_template: >
+    sql_insert_template: >
        INSERT INTO Error_Table (Error_Message, Server_Name) 
        VALUES ('{{ error_msg }}', '{{ server_name }}');
-    
+    sql_select_template: >
+       SELECT COUNT(*) FROM Error_Table 
+       WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}');
+     
   tasks:
     - name: Ensure MySQL client is installed
       ansible.builtin.package:
         name: mysql
         state: present
 
-    - name: Insert entry into MySQL database
+    - name: Check if the Server Name & Error already exist
       ansible.builtin.shell: |
-        mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_template }}"
+        mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_select_template }}"       
+      register: duplicate_check
 
-
-  ---
-- name: Insert user if email does not exist
-  hosts: db_servers
-  vars:
-    db_name: myapp
-    db_user: dbadmin
-    db_password: "{{ vault_db_password }}"
-    db_host: localhost
-    user_email: "user@example.com"
-    user_name: "Alice"
-
-  tasks:
-
-    - name: Check if user email already exists
-      community.postgresql.postgresql_query:
-        db: "{{ db_name }}"
-        login_user: "{{ db_user }}"
-        login_password: "{{ db_password }}"
-        login_host: "{{ db_host }}"
-        query: "SELECT COUNT(*) FROM users WHERE LOWER(email) = LOWER('{{ user_email }}');"
-      register: email_check
+     - name: Print the full duplicate_check result
+       debug:
+           var: duplicate_check
 
     - name: Show found status
       debug:
-        msg: "User already exists with email {{ user_email }}"
-      when: email_check.query_result[0]['count'] | int > 0
-
-    - name: Insert user if not exists
-      community.postgresql.postgresql_query:
-        db: "{{ db_name }}"
-        login_user: "{{ db_user }}"
-        login_password: "{{ db_password }}"
-        login_host: "{{ db_host }}"
-        query: >
-          INSERT INTO users (email, name)
-          VALUES (LOWER('{{ user_email }}'), '{{ user_name }}');
-      when: email_check.query_result[0]['count'] | int == 0
-
+        msg: "Error already exists for the server {{ server_name }}"
+      when: duplicate_check.query_result[0]['count'] | int > 0
+      
+    - name: Insert entry into MySQL database
+      ansible.builtin.shell: |
+        mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_insert_template }}"
+      when: duplicate_check.query_result[0]['count'] | int == 0
+  
