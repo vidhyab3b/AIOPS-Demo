@@ -14,7 +14,7 @@
        INSERT INTO Error_Table (Error_Message, Server_Name) 
        VALUES ('{{ error_msg }}', '{{ server_name }}');
     sql_select_template: >
-       SELECT COUNT(*) FROM Error_Table 
+       SELECT * FROM Error_Table 
        WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
        AND created_at < NOW() - INTERVAL 1 DAY;
      
