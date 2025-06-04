@@ -7,10 +7,12 @@
     db_user: "mysql"
     db_pass: "redhat"
     db_name: "aiopsdb"
+    server_name: "nginxserver.demolab.com"
+    error_msg: "Nginx service is not running."
     # This will be dynamically templated during playbook execution
     sql_template: >
        INSERT INTO Error_Table (Error_Message, Server_Name) 
-       VALUES ('Nginx service is not running.', 'nginxserver.demolab.com');
+       VALUES ('{{ error_msg }}', '{{ server_name }}');
     
   tasks:
     - name: Ensure MySQL client is installed
