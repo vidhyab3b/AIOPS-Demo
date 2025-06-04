@@ -14,7 +14,7 @@
        INSERT INTO Error_Table (Error_Message, Server_Name) 
        VALUES ('{{ error_msg }}', '{{ server_name }}');
     sql_select_template: >
-       SELECT * FROM Error_Table 
+       SELECT COUNT(*) FROM Error_Table 
        WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
        AND created_at >= NOW() - INTERVAL 1 DAY;
      
@@ -31,20 +31,7 @@
 
     - name: Print the full duplicate_check result
       debug:
-        var: duplicate_check.stdout_lines
-
-    - name: Show all matching entries (for debug)
-      shell: |
-        mysql -N -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "
-        SELECT Server_Name, Error_Message, created_at
-        FROM Error_Table
-        WHERE LOWER(Server_Name) = LOWER('{{ server_name }}')
-        AND LOWER(Error_Message) = LOWER('{{ error_msg }}');"
-      register: full_match_check
-
-    - name: Print all matching entries
-      debug:
-        var: full_match_check.stdout_lines
+        var: duplicate_check.stdout
         
     - name: Show found status
       debug:
@@ -55,4 +42,3 @@
       ansible.builtin.shell: |
         mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_insert_template }}"
       when: duplicate_check.stdout | int == 0
-  
