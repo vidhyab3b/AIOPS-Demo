@@ -16,7 +16,7 @@
     sql_select_template: >
        SELECT * FROM Error_Table 
        WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
-       AND created_at < NOW() - INTERVAL 1 DAY;
+       AND created_at >= NOW() - INTERVAL 1 DAY;
      
   tasks:
     - name: Ensure MySQL client is installed
