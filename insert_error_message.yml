@@ -1,0 +1,23 @@
+---
+- name: Insert Error Message Info into MySQL DB
+  hosts: all
+  become: yes
+  vars:
+    db_host: "100.69.84.37"
+    db_user: "mysql"
+    db_pass: "redhat"
+    db_name: "aiopsdb"
+    # This will be dynamically templated during playbook execution
+    sql_template: >
+       INSERT INTO Error_Table (Error_Message, Server_Name) 
+       VALUES ('Nginx service is not running.', 'nginxserver.demolab.com');
+    
+  tasks:
+    - name: Ensure MySQL client is installed
+      ansible.builtin.package:
+        name: mysql
+        state: present
+
+    - name: Insert entry into MySQL database
+      ansible.builtin.shell: |
+        mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_template }}"
