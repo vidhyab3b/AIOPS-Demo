@@ -30,7 +30,7 @@
 
     - name: Print the full duplicate_check result
       debug:
-        var: duplicate_check
+        var: duplicate_check.stdout
 
     - name: Show found status
       debug:
