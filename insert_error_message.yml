@@ -28,10 +28,6 @@
       ansible.builtin.shell: |
         mysql -N -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_select_template }}"       
       register: duplicate_check
-
-    - name: Print the full duplicate_check result
-      debug:
-        var: duplicate_check.stdout
         
     - name: Show found status
       debug:
