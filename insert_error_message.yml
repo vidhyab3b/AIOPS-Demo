@@ -21,3 +21,43 @@
     - name: Insert entry into MySQL database
       ansible.builtin.shell: |
         mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_template }}"
+
+
+  ---
+- name: Insert user if email does not exist
+  hosts: db_servers
+  vars:
+    db_name: myapp
+    db_user: dbadmin
+    db_password: "{{ vault_db_password }}"
+    db_host: localhost
+    user_email: "user@example.com"
+    user_name: "Alice"
+
+  tasks:
+
+    - name: Check if user email already exists
+      community.postgresql.postgresql_query:
+        db: "{{ db_name }}"
+        login_user: "{{ db_user }}"
+        login_password: "{{ db_password }}"
+        login_host: "{{ db_host }}"
+        query: "SELECT COUNT(*) FROM users WHERE LOWER(email) = LOWER('{{ user_email }}');"
+      register: email_check
+
+    - name: Show found status
+      debug:
+        msg: "User already exists with email {{ user_email }}"
+      when: email_check.query_result[0]['count'] | int > 0
+
+    - name: Insert user if not exists
+      community.postgresql.postgresql_query:
+        db: "{{ db_name }}"
+        login_user: "{{ db_user }}"
+        login_password: "{{ db_password }}"
+        login_host: "{{ db_host }}"
+        query: >
+          INSERT INTO users (email, name)
+          VALUES (LOWER('{{ user_email }}'), '{{ user_name }}');
+      when: email_check.query_result[0]['count'] | int == 0
+
