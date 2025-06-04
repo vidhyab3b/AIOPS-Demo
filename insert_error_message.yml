@@ -25,7 +25,7 @@
 
     - name: Check if the Server Name & Error already exist
       ansible.builtin.shell: |
-        mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_select_template }}"       
+        mysql -N -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_select_template }}"       
       register: duplicate_check
 
     - name: Print the full duplicate_check result
