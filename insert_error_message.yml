@@ -31,7 +31,7 @@
 
     - name: Print the full duplicate_check result
       debug:
-        var: duplicate_check.stdout
+        var: duplicate_check.stdout_lines
 
     - name: Show all matching entries (for debug)
       shell: |
