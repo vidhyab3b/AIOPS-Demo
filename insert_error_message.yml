@@ -1,0 +1,40 @@
+---
+- name: Insert Error Message Info into MySQL DB
+  hosts: all
+  become: yes
+  vars:
+    db_host: "100.69.84.37"
+    db_user: "mysql"
+    db_pass: "redhat"
+    db_name: "aiopsdb"
+    server_name: "nginxserver.demolab.com"
+    error_msg: "Nginx service is not running."
+    # This will be dynamically templated during playbook execution
+    sql_insert_template: >
+       INSERT INTO Error_Table (Error_Message, Server_Name) 
+       VALUES ('{{ error_msg }}', '{{ server_name }}');
+    sql_select_template: >
+       SELECT COUNT(*) FROM Error_Table 
+       WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
+       AND created_at >= NOW() - INTERVAL 1 DAY;
+     
+  tasks:
+    - name: Ensure MySQL client is installed
+      ansible.builtin.package:
+        name: mysql
+        state: present
+
+    - name: Check if the Server Name & Error already exist
+      ansible.builtin.shell: |
+        mysql -N -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_select_template }}"       
+      register: duplicate_check
+        
+    - name: Show found status
+      debug:
+        msg: "Error already exists for the server {{ server_name }}"
+      when: duplicate_check.stdout | int > 0
+      
+    - name: Insert entry into MySQL database
+      ansible.builtin.shell: |
+        mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_insert_template }}"
+      when: duplicate_check.stdout | int == 0
