@@ -11,8 +11,6 @@
     - name: Insert Error Message Info into MySQL DB
       condition: event.url_check.status == "down"
       action:
-         - print_event:
-           message: "ALERT: The monitored URL is down!"
-         - run_job_template:
-           name: "DB Update"
-           organization: "Default"
+        run_job_template:
+          name: "DB Update"
+          organization: "Default"
