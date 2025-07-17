@@ -9,10 +9,11 @@
     db_name: "aiopsdb"
     server_name: "nginxserver.demolab.com"
     error_msg: "Nginx service is not running."
+    status_msg: "Open"
     # This will be dynamically templated during playbook execution
     sql_insert_template: >
-       INSERT INTO Error_Table (Error_Message, Server_Name) 
-       VALUES ('{{ error_msg }}', '{{ server_name }}');
+       INSERT INTO Error_Table (Error_Message, Server_Name, Status) 
+       VALUES ('{{ error_msg }}', '{{ server_name }}', '{{ status_msg }}');
     sql_select_template: >
        SELECT COUNT(*) FROM Error_Table 
        WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
