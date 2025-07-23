@@ -16,7 +16,7 @@
        VALUES ('{{ error_msg }}', '{{ server_name }}', '{{ status_msg }}');
     sql_select_template: >
        SELECT COUNT(*) FROM Error_Table 
-       WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}') AND LOWER(Status) = 'open'
+       WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
        AND created_at >= NOW() - INTERVAL 1 HOUR;
      
   tasks:
