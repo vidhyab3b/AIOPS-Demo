@@ -38,4 +38,4 @@
     - name: Insert entry into MySQL database
       ansible.builtin.shell: |
         mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_insert_template }}"
-      when: duplicate_check.stdout | int == 0
+ #     when: duplicate_check.stdout | int == 0
