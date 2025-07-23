@@ -16,8 +16,8 @@
        VALUES ('{{ error_msg }}', '{{ server_name }}', '{{ status_msg }}');
     sql_select_template: >
        SELECT COUNT(*) FROM Error_Table 
-       WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
-       AND created_at >= NOW() - INTERVAL 1 DAY;
+       WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}') AND LOWER(Status) = 'open'
+       AND created_at >= NOW() - INTERVAL 1 HOUR;
      
   tasks:
     - name: Ensure MySQL client is installed
@@ -25,17 +25,17 @@
         name: mysql
         state: present
 
-#    - name: Check if the Server Name & Error already exist
-#      ansible.builtin.shell: |
-#        mysql -N -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_select_template }}"       
-#      register: duplicate_check
+    - name: Check if the Server Name & Error already exist
+      ansible.builtin.shell: |
+        mysql -N -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_select_template }}"       
+      register: duplicate_check
         
-#    - name: Show found status
-#      debug:
-#        msg: "Error already exists for the server {{ server_name }}"
-#      when: duplicate_check.stdout | int > 0
+    - name: Show found status
+      debug:
+        msg: "Error already exists for the server {{ server_name }}"
+      when: duplicate_check.stdout | int > 0
       
     - name: Insert entry into MySQL database
       ansible.builtin.shell: |
         mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_insert_template }}"
- #     when: duplicate_check.stdout | int == 0
+      when: duplicate_check.stdout | int == 0
