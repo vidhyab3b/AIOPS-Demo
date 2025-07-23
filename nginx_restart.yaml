@@ -1,0 +1,24 @@
+---
+- name: Ensure Nginx is running
+  hosts: all
+  become: true
+  tasks:
+    - name: Check Nginx status
+      systemd:
+        name: nginx
+        state: started
+      register: nginx_status
+
+    - name: Start Nginx if not running
+      systemd:
+        name: nginx
+        state: started
+      when: nginx_status.status.ActiveState != "active"
+      notify:
+        - Reload Nginx  #Optional: if config changes need to be applied after start
+
+  handlers:
+    - name: Reload Nginx
+      systemd:
+        name: nginx
+        state: reloaded
