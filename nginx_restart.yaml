@@ -30,3 +30,4 @@
       debug:
         msg: "Error Starting Nginx"
       when: nginx_start.failed
+      ignore_errors: yes
