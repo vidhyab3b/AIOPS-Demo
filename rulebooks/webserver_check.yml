@@ -12,5 +12,5 @@
       condition: event.url_check.status == "down"
       action:
         run_job_template:
-          name: "NGINX Job Template"
+          name: "Web Server Check Job Template"
           organization: "Default"
