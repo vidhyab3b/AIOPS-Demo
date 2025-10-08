@@ -3,7 +3,7 @@
   hosts: all
   become: yes
   vars:
-    db_host: "bastion.wkq7q.sandbox2937.opentlc.com"
+    db_host: "localhost"
     db_user: "mysql"
     db_pass: "redhat"
     db_name: "aiopsdb"
