@@ -3,11 +3,11 @@
   hosts: all
   become: yes
   vars:
-    db_host: "100.69.84.37"
+    db_host: "bastion.wkq7q.sandbox2937.opentlc.com"
     db_user: "mysql"
     db_pass: "redhat"
     db_name: "aiopsdb"
-    server_name: "nginxserver.demolab.com"
+    server_name: "bastion.wkq7q.sandbox2937.opentlc.com"
     error_msg: "Nginx service is not running."
     status_msg: "Open"
     # This will be dynamically templated during playbook execution
@@ -22,12 +22,12 @@
   tasks:
     - name: Ensure MySQL client is installed
       ansible.builtin.package:
-        name: mysql
+        name: mysqlsh
         state: present
 
     - name: Check if the Server Name & Error already exist
       ansible.builtin.shell: |
-        mysql -N -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_select_template }}"       
+        mysqlsh --sql -h {{ db_host }} -u {{ db_user }} -p{{ db_pass }} --schema {{ db_name }} --execute "{{ sql_select_template }}"
       register: duplicate_check
         
     - name: Show found status
@@ -37,5 +37,5 @@
       
     - name: Insert entry into MySQL database
       ansible.builtin.shell: |
-        mysql -h {{ db_host }} -u {{ db_user }} -p'{{ db_pass }}' {{ db_name }} -e "{{ sql_insert_template }}"
+        mysqlsh --sql -h {{ db_host }} -u {{ db_user }} -p{{ db_pass }} --schema {{ db_name }} --execute "{{ sql_insert_template }}"
       when: duplicate_check.stdout | int == 0
