@@ -20,9 +20,9 @@
        AND created_at >= NOW() - INTERVAL 1 HOUR;
      
   tasks:
-    - name: Ensure MySQL client is installed
+    - name: Ensure MySQL Shell (mysqlsh) is installed
       ansible.builtin.package:
-        name: mysqlsh
+        name: mysql-shell
         state: present
 
     - name: Check if the Server Name & Error already exist
