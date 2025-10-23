@@ -1,4 +1,3 @@
-yaml
 ---
 - name: Ensure Nginx is running
   hosts: all
