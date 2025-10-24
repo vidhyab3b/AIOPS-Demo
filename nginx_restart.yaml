@@ -1,0 +1,18 @@
+yaml
+---
+- name: Ensure Nginx is running
+  hosts: all
+  become: true
+  tasks:
+    - name: Check Nginx status
+      systemd:
+        name: nginx
+        state: started
+      register: nginx_status
+
+    - name: Start Nginx if not running
+      systemd:
+        name: nginx
+        state: started
+      when: nginx_status.active == false
+
