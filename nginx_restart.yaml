@@ -12,4 +12,4 @@
       systemd:
         name: nginx
         state: started
-      when: nginx_status.active == false
+      when: nginx_status.status.ActiveState != "active"
