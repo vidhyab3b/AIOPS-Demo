@@ -1,4 +1,3 @@
-yaml
 ---
 - name: Ensure Nginx is running
   hosts: all
@@ -15,4 +14,3 @@ yaml
         name: nginx
         state: started
       when: nginx_status.active == false
-
