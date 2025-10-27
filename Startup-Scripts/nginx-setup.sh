@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Prompt for Bastion Node's FQDN
+read -p "Enter the Bastion Node's FQDN: " HOST
 while [[ -z "$HOST" ]]; do
     read -p "Enter the Bastion Node's FQDN: " HOST
     if [[ -z "$HOST" ]]; then
@@ -9,6 +10,7 @@ while [[ -z "$HOST" ]]; do
 done
 
 # Prompt for Bastion Node's Username
+read -p "Enter the Bastion Node's Username: " USERNAME
 while [[ -z "$USERNAME" ]]; do
     read -p "Enter the Bastion Node's Username: " USERNAME
     if [[ -z "$USERNAME" ]]; then
@@ -17,6 +19,7 @@ while [[ -z "$USERNAME" ]]; do
 done
 
 # Prompt for Bastion Node's Password (silent input)
+read -s -p "Enter the Bastion Node's Password: " PASSWORD
 while [[ -z "$PASSWORD" ]]; do
     read -s -p "Enter the Bastion Node's Password: " PASSWORD
     echo  # Move to a new line after password input
