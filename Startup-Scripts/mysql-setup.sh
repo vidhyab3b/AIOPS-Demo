@@ -192,18 +192,12 @@ oc wait pod/$CLEANER_POD_NAME --for=condition=Succeeded --timeout=120s || {
   echo "Cleaner pod did not succeed within timeout. Checking status..."
   oc get pod/$CLEANER_POD_NAME
   oc logs $CLEANER_POD_NAME || true
-  exit 1
 }
 
-# === Step 4: Display logs ===
-echo "--- Cleaner pod logs ---"
-oc logs $CLEANER_POD_NAME
-
-# === Step 5: Cleanup the cleaner pod ===
+# === Step 4: Cleanup the cleaner pod ===
 echo "--- Deleting the cleaner pod ---"
 oc delete pod $CLEANER_POD_NAME --ignore-not-found
-
-echo "--- MySQL volume cleanup completed successfully ---"
+echo; echo "--- MySQL volume cleanup completed successfully ---"
 fi
 
 oc rollout restart deployment/$APP_NAME
