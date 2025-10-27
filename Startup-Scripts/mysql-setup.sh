@@ -119,7 +119,7 @@ MAX_ATTEMPTS=15
 cleaner=1
 
 while true; do
-    POD_STATUS=$(oc get pods -l app=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
+    POD_STATUS=$(oc get pods -l deployment=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
 
     if [[ "$POD_STATUS" == "Running" ]]; then
         echo "MySQL pod is running."
@@ -127,8 +127,8 @@ while true; do
         break
     elif [[ "$POD_STATUS" == "CrashLoopBackOff" || "$POD_STATUS" == "Error" ]]; then
         echo "MySQL pod failed to start. Gathering details..."
-        oc describe pod -l app=$APP_NAME
-        oc logs -l app=$APP_NAME --tail=50
+        oc describe pod -l deployment=$APP_NAME
+        oc logs -l deployment=$APP_NAME --tail=50
         exit 1
     elif [[ "$POD_STATUS" == "Pending" || "$POD_STATUS" == "ContainerCreating" ]]; then
         echo "Pod is still starting... (Attempt $ATTEMPTS/$MAX_ATTEMPTS)"
@@ -207,15 +207,15 @@ ATTEMPTS=0
 MAX_ATTEMPTS=20
 
 while true; do
-    POD_STATUS=$(oc get pods -l app=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
+    POD_STATUS=$(oc get pods -l deployment=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
 
     if [[ "$POD_STATUS" == "Running" ]]; then
         echo "MySQL pod is running."
         break
     elif [[ "$POD_STATUS" == "CrashLoopBackOff" || "$POD_STATUS" == "Error" ]]; then
         echo "MySQL pod failed to start. Gathering details..."
-        oc describe pod -l app=$APP_NAME
-        oc logs -l app=$APP_NAME --tail=50
+        oc describe pod -l deployment=$APP_NAME
+        oc logs -l deployment=$APP_NAME --tail=50
         exit 1
     elif [[ "$POD_STATUS" == "Pending" || "$POD_STATUS" == "ContainerCreating" ]]; then
         echo "Pod is still starting... (Attempt $ATTEMPTS/$MAX_ATTEMPTS)"
