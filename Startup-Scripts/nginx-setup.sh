@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Prompt for Bastion Node's FQDN
-read -p "Enter the Bastion Node's FQDN: " HOST
-while [[ -z "$HOST" ]]; do
-    read -p "Enter the Bastion Node's FQDN: " HOST
-    if [[ -z "$HOST" ]]; then
+read -p "Enter the Bastion Node's FQDN: " BASTION_HOST
+while [[ -z "$BASTION_HOST" ]]; do
+    read -p "Enter the Bastion Node's FQDN: " BASTION_HOST
+    if [[ -z "$BASTION_HOST" ]]; then
         echo "FQDN cannot be empty. Please try again."
     fi
 done
@@ -28,11 +28,11 @@ while [[ -z "$PASSWORD" ]]; do
     fi
 done
 
-echo "Logging in to the server $HOST"
+echo "Logging in to the server $BASTION_HOST"
 
 # Run the SSH command using sshpass
-sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$HOST" bash -s <<'EOF'
-echo "Installing nginx in the $HOST"
+sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$BASTION_HOST" bash -s <<'EOF'
+echo "Installing nginx in the `hostname`"
 sudo yum install nginx -y
 
 # Change nginx listen port to 8080 (IPv4 and IPv6)
