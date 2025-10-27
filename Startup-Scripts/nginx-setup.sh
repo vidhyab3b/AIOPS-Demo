@@ -28,6 +28,10 @@ while [[ -z "$PASSWORD" ]]; do
     fi
 done
 
+echo "export BASTION_HOST=\"$BASTION_HOST\"" > aiops_demojam.env
+echo "export USERNAME=\"$USERNAME\"" >> aiops_demojam.env
+echo "export PASSWORD=\"$PASSWORD\"" >> aiops_demojam.env
+
 echo "Logging in to the server $BASTION_HOST"
 
 # Run the SSH command using sshpass
