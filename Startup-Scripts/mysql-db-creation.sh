@@ -8,6 +8,7 @@ dnf clean all
 
 nohup oc port-forward deployment/mysql-db 3306:3306 -n aiops > port-forward.log 2>&1 &
 
+echo "Creating Tables"
 mysqlsh --host=127.0.0.1 --user=mysql --password=redhat --port=3306 --sql -e "
 USE aiopsdb;
 CREATE TABLE Error_Table (
