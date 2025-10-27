@@ -112,10 +112,41 @@ oc patch deployment $APP_NAME -p "{
   }
 }"
 
-# === Step 6: Final status ===
-echo "Deployment complete! Checking status..."
-oc get pods
-oc get pvc $PVC_NAME
-oc get deployment $APP_NAME
+# === Step 6: Wait for Pods to Start ===
+echo "Waiting for MySQL pods to start..."
+ATTEMPTS=0
+MAX_ATTEMPTS=15
 
-echo "--- MySQL ($APP_NAME) deployed successfully with persistent storage. ---"
+while true; do
+    POD_STATUS=$(oc get pods -l app=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
+
+    if [[ "$POD_STATUS" == "Running" ]]; then
+        echo "MySQL pod is running."
+        break
+    elif [[ "$POD_STATUS" == "CrashLoopBackOff" || "$POD_STATUS" == "Error" ]]; then
+        echo "MySQL pod failed to start. Gathering details..."
+        oc describe pod -l app=$APP_NAME
+        oc logs -l app=$APP_NAME --tail=50
+        exit 1
+    elif [[ "$POD_STATUS" == "Pending" || "$POD_STATUS" == "ContainerCreating" ]]; then
+        echo "Pod is still starting... (Attempt $ATTEMPTS/$MAX_ATTEMPTS)"
+        sleep 10
+    else
+        echo "Pod status: $POD_STATUS. Retrying..."
+        sleep 5
+    fi
+
+    ((ATTEMPTS++))
+    if [[ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]]; then
+        echo "Timeout: Pod did not reach running state within expected time."
+        exit 1
+    fi
+done
+
+# === Step 7: Final Status ===
+echo "Deployment complete! Current status:"
+oc get pods
+oc get pvc "$PVC_NAME"
+oc get deployment "$APP_NAME"
+
+echo "-- MySQL ($APP_NAME) deployed successfully with persistent storage. ---"
