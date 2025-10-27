@@ -2,7 +2,8 @@
 
 source  aiops_demojam.env
 
-# Prompt for Bastion Node's FQDN
+sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$BASTION_HOST" bash -s <<'EOF'
+# Prompt for OCP API URL
 read -p "Enter the OCP API URL: " OCP_API_URL
 while [[ -z "$OCP_API_URL" ]]; do
     read -p "Enter the OCP API URL: " OCP_API_URL
@@ -11,7 +12,7 @@ while [[ -z "$OCP_API_URL" ]]; do
     fi
 done
 
-# Prompt for Bastion Node's FQDN
+# Prompt for OCP Username
 read -p "Enter the OCP Username: " OCP_USERNAME
 while [[ -z "$OCP_USERNAME" ]]; do
     read -p "Enter the OCP Username: " OCP_USERNAME
@@ -20,7 +21,7 @@ while [[ -z "$OCP_USERNAME" ]]; do
     fi
 done
 
-# Prompt for Bastion Node's FQDN
+# Prompt for OCP PAssword
 read -p "Enter the OCP Password: " OCP_PASSWORD
 while [[ -z "$OCP_PASSWORD" ]]; do
     read -p "Enter the OCP Password: " OCP_PASSWORD
@@ -28,3 +29,16 @@ while [[ -z "$OCP_PASSWORD" ]]; do
         echo "PASSWORD cannot be empty. Please try again."
     fi
 done
+
+
+sudo echo "export OCP_API_URL=\"$OCP_API_URL\"" > /root/aiops_ocp_demojam.env
+sudo echo "export OCP_USERNAME=\"$OCP_USERNAME\"" >> /root/aiops_ocp_demojam.env
+sudo echo "export OCP_PASSWORD=\"$OCP_PASSWORD\"" >> /root/aiops_ocp_demojam.env
+
+echo "Logging into the OCP Cluster - $OCP_API_URL"
+oc login -u $OCP_USERNAME -p $OCP_PASSWORD $OCP_API_URL
+
+echo "Creating the project aiops"
+oc new-project aiops
+
+EOF
