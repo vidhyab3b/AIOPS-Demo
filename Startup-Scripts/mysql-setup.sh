@@ -1,8 +1,5 @@
 #!/bin/bash
 
-source  ./aiops_demojam.env
-
-sshpass -p "$PASSWORD" ssh -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$BASTION_HOST" /bin/bash <<'EOF'
 # Prompt for OCP API URL
 read -p "Enter the OCP API URL: " OCP_API_URL
 while [[ -z "$OCP_API_URL" ]]; do
@@ -22,9 +19,9 @@ while [[ -z "$OCP_USERNAME" ]]; do
 done
 
 # Prompt for OCP PAssword
-read -p "Enter the OCP Password: " OCP_PASSWORD
+read -s -p "Enter the OCP Password: " OCP_PASSWORD
 while [[ -z "$OCP_PASSWORD" ]]; do
-    read -p "Enter the OCP Password: " OCP_PASSWORD
+    read -s -p "Enter the OCP Password: " OCP_PASSWORD
     if [[ -z "$OCP_PASSWORD" ]]; then
         echo "PASSWORD cannot be empty. Please try again."
     fi
@@ -40,5 +37,3 @@ oc login -u $OCP_USERNAME -p $OCP_PASSWORD $OCP_API_URL
 
 echo "Creating the project aiops"
 oc new-project aiops
-
-EOF
