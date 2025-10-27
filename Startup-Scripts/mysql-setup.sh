@@ -114,38 +114,7 @@ oc patch deployment $APP_NAME -p "{
 
 # === Step 6: Wait for Pods to Start ===
 echo "Waiting for MySQL pods to start..."
-ATTEMPTS=0
-MAX_ATTEMPTS=15
-cleaner=1
-
-while true; do
-    POD_STATUS=$(oc get pods -l deployment=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
-
-    if [[ "$POD_STATUS" == "Running" ]]; then
-        echo "MySQL pod is running."
-        cleaner=0
-        break
-    elif [[ "$POD_STATUS" == "CrashLoopBackOff" || "$POD_STATUS" == "Error" ]]; then
-        echo "MySQL pod failed to start. Gathering details..."
-        oc describe pod -l deployment=$APP_NAME
-        oc logs -l deployment=$APP_NAME --tail=50
-        exit 1
-    elif [[ "$POD_STATUS" == "Pending" || "$POD_STATUS" == "ContainerCreating" ]]; then
-        echo "Pod is still starting... (Attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-        sleep 10
-    else
-        echo "Pod status: $POD_STATUS. Retrying..."
-        sleep 5
-    fi
-
-    ((ATTEMPTS++))
-    if [[ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]]; then
-        echo "Timeout: Pod did not reach running state within expected time."
-        break
-    fi
-done
-
-if [ $cleaner -ne 0 ]; then
+sleep 30s
 
 # === Configuration ===
 CLEANER_POD_NAME="mysql-cleaner"
@@ -231,5 +200,3 @@ while true; do
         break
     fi
 done
-
-fi
