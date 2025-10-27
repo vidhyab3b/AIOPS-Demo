@@ -1,4 +1,5 @@
-#! /bin/bash
+#!/bin/bash
+
 echo "Installing nginx in the `hostname`"
 sudo yum install nginx -y
 
