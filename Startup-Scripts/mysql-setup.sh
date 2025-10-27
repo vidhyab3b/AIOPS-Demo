@@ -116,12 +116,14 @@ oc patch deployment $APP_NAME -p "{
 echo "Waiting for MySQL pods to start..."
 ATTEMPTS=0
 MAX_ATTEMPTS=15
+cleaner=1
 
 while true; do
     POD_STATUS=$(oc get pods -l app=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
 
     if [[ "$POD_STATUS" == "Running" ]]; then
         echo "MySQL pod is running."
+        cleaner=0
         break
     elif [[ "$POD_STATUS" == "CrashLoopBackOff" || "$POD_STATUS" == "Error" ]]; then
         echo "MySQL pod failed to start. Gathering details..."
@@ -143,10 +145,66 @@ while true; do
     fi
 done
 
-# === Step 7: Final Status ===
-echo "Deployment complete! Current status:"
-oc get pods
-oc get pvc "$PVC_NAME"
-oc get deployment "$APP_NAME"
+if [ $cleaner -ne 0 ]; then
+
+# === Configuration ===
+CLEANER_POD_NAME="mysql-cleaner"
+PVC_NAME="mysql-pvc"
+YAML_FILE="cleaner.yml"
+
+echo "--- Creating MySQL cleaner pod definition ---"
+
+# === Step 1: Generate the YAML ===
+cat <<EOF > $YAML_FILE
+apiVersion: v1
+kind: Pod
+metadata:
+  name: $CLEANER_POD_NAME
+spec:
+  restartPolicy: Never
+  containers:
+  - name: cleaner
+    image: registry.access.redhat.com/ubi9/ubi
+    command: ["/bin/bash", "-c", "rm -rf /var/lib/mysql/* && echo 'Volume cleaned successfully' && sleep 10"]
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+    volumeMounts:
+    - name: mysql-persistent-storage
+      mountPath: /var/lib/mysql
+  volumes:
+  - name: mysql-persistent-storage
+    persistentVolumeClaim:
+      claimName: $PVC_NAME
+EOF
+
+# === Step 2: Apply the YAML ===
+echo "--- Deploying MySQL cleaner pod ---"
+oc apply -f $YAML_FILE
+
+# === Step 3: Wait for the pod to complete ===
+echo "--- Waiting for the cleaner pod to finish ---"
+oc wait pod/$CLEANER_POD_NAME --for=condition=Succeeded --timeout=120s || {
+  echo "Cleaner pod did not succeed within timeout. Checking status..."
+  oc get pod/$CLEANER_POD_NAME
+  oc logs $CLEANER_POD_NAME || true
+  exit 1
+}
+
+# === Step 4: Display logs ===
+echo "--- Cleaner pod logs ---"
+oc logs $CLEANER_POD_NAME
+
+# === Step 5: Cleanup the cleaner pod ===
+echo "--- Deleting the cleaner pod ---"
+oc delete pod $CLEANER_POD_NAME --ignore-not-found
+
+echo "--- MySQL volume cleanup completed successfully ---"
+fi
+
 
 echo "-- MySQL ($APP_NAME) deployed successfully with persistent storage. ---"
