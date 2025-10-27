@@ -19,8 +19,8 @@ oc patch bc aiopsui -p '{
 }'
 
 echo "Starting the build of AIOps UI after setting the resources"
-oc start-build aiopsui
 oc cancel-build aiopsui-1
+oc start-build aiopsui --follow
 
 echo "Set the resource limits for the deployment"
 oc set resources deployment/aiopsui \
