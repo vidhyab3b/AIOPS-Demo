@@ -35,4 +35,4 @@ oc patch svc aiops-qks -n aiops --type='json' -p='[
     "path": "/spec/ports/1"
   }
 ]'
-oc expose svc aiopsui
+oc expose svc aiops-qks
