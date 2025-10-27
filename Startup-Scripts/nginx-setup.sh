@@ -32,9 +32,6 @@ echo "Logging in to the server $HOST"
 
 # Run the SSH command using sshpass
 sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$HOST" bash -s <<'EOF'
-if [ $? -ne 0 ]; then
-echo "Verify the credentials and rerun the script"
-else
 echo "Installing nginx in the $HOST"
 sudo yum install nginx -y
 
@@ -46,5 +43,4 @@ echo "Configured nginx to listen in port 8080 in the `hostname`"
 sudo systemctl start nginx
 sudo systemctl enable nginx
 echo "Started & enabled nginx in systemctl"
-fi
 EOF
