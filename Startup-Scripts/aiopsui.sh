@@ -28,4 +28,5 @@ oc set resources deployment/aiopsui \
   --requests=cpu=250m,memory=256Mi
 oc rollout restart deployment/aiopsui
 
+oc patch svc aiopsui -n aiops --type='json' -p='[{"op": "replace", "path": "/spec/ports/0/port", "value": 443}]'
 oc expose svc aiopsui
