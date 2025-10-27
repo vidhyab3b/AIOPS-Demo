@@ -3,7 +3,7 @@
   hosts: all
   become: yes
   vars:
-    db_host: "mysql-db.aiops.svc.cluster.local"
+    db_host: "127.0.0.1"
     db_user: "mysql"
     db_pass: "redhat"
     db_name: "aiopsdb"
