@@ -141,7 +141,7 @@ while true; do
     ((ATTEMPTS++))
     if [[ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]]; then
         echo "Timeout: Pod did not reach running state within expected time."
-        exit 1
+        break
     fi
 done
 
