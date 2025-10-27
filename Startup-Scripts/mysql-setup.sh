@@ -204,14 +204,13 @@ oc rollout restart deployment/$APP_NAME
 # === Step 6: Wait for Pods to Start ===
 echo "Waiting for MySQL pods to start..."
 ATTEMPTS=0
-MAX_ATTEMPTS=15
+MAX_ATTEMPTS=20
 
 while true; do
     POD_STATUS=$(oc get pods -l app=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
 
     if [[ "$POD_STATUS" == "Running" ]]; then
         echo "MySQL pod is running."
-        cleaner=0
         break
     elif [[ "$POD_STATUS" == "CrashLoopBackOff" || "$POD_STATUS" == "Error" ]]; then
         echo "MySQL pod failed to start. Gathering details..."
@@ -230,8 +229,6 @@ while true; do
     if [[ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]]; then
         echo "Timeout: Pod did not reach running state within expected time."
         break
-    else
-        echo "-- MySQL ($APP_NAME) deployed successfully with persistent storage. ---"
     fi
 done
 
