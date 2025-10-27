@@ -2,7 +2,7 @@
 
 source  aiops_demojam.env
 
-sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$BASTION_HOST" bash -s <<'EOF'
+sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$BASTION_HOST" bash -s <<EOF
 # Prompt for OCP API URL
 read -p "Enter the OCP API URL: " OCP_API_URL
 while [[ -z "$OCP_API_URL" ]]; do
