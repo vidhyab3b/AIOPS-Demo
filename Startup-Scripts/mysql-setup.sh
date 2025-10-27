@@ -83,10 +83,10 @@ EOF
 # === Step 4: Apply PVC ===
 echo "Applying PersistentVolumeClaim..."
 if oc get pvc $PVC_NAME >/dev/null 2>&1; then
-  echo "PVC '$PVC_NAME' already exists. Recreating..."
-  oc delete pvc $PVC_NAME --ignore-not-found
-fi
+  echo "PVC '$PVC_NAME' already exists. Skipping the creation..."
+else
 oc apply -f $PVC_FILE
+fi
 
 # === Step 5: Patch Deployment to use PVC ===
 echo "Patching deployment to use persistent storage..."
