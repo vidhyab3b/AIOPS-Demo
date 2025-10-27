@@ -198,7 +198,6 @@ oc wait pod/$CLEANER_POD_NAME --for=condition=Succeeded --timeout=120s || {
 echo "--- Deleting the cleaner pod ---"
 oc delete pod $CLEANER_POD_NAME --ignore-not-found
 echo; echo "--- MySQL volume cleanup completed successfully ---"
-fi
 
 oc rollout restart deployment/$APP_NAME
 
@@ -206,7 +205,6 @@ oc rollout restart deployment/$APP_NAME
 echo "Waiting for MySQL pods to start..."
 ATTEMPTS=0
 MAX_ATTEMPTS=15
-cleaner=1
 
 while true; do
     POD_STATUS=$(oc get pods -l app=$APP_NAME -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "NotFound")
@@ -237,3 +235,4 @@ while true; do
     fi
 done
 
+fi
