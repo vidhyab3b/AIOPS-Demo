@@ -200,3 +200,5 @@ while true; do
         break
     fi
 done
+
+nohup oc port-forward deployment/mysql-db 3306:3306 -n aiops > port-forward.log 2>&1 &
