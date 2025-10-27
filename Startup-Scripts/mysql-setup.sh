@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source  aiops_demojam.env
+source  ./aiops_demojam.env
 
 sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$BASTION_HOST" bash -s <<EOF
 # Prompt for OCP API URL
