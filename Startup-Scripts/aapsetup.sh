@@ -101,6 +101,12 @@ curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
 }"
 echo; echo; echo "Created the Project 'AIOPS REPO'"
 
+PROJECT_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/projects/" | jq -r '.results[] | select(.name=="AIOPS REPO") | .id')
+CREDENTIAL_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/credentials/" | jq -r '.results[] | select(.name=="Nginx Server") | .id')
+EE_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/execution_environments/" | jq -r '.results[] | select(.name=="Default execution environment") | .id')
+
+echo "Execution Environment ID: $EE_ID"
+
 # Create the Project
 curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
   -H "Content-Type: application/json" \
@@ -113,6 +119,7 @@ curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
     \"project\": $PROJECT_ID,
     \"playbook\": \"insert_error_message.yml\",
     \"credentials\": [$CREDENTIAL_ID],
-    \"execution_environment\": $EE_ID
+    \"execution_environment\": $EE_ID,
+    \"job_type\": \"run\"
 }"
 echo; echo; echo "Created a Job Template 'DB Update'"
