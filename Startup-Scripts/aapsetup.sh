@@ -19,7 +19,7 @@ done
 
 read -s -p "Enter the AAP Password: " AAP_PASSWORD
 while [[ -z "$AAP_PASSWORD" ]]; do
-    read -s -p "Enter the Bastion Node's Password: " AAP_PASSWORD
+    read -s -p "Enter the AAP Password: " AAP_PASSWORD
     echo
     if [[ -z "$AAP_PASSWORD" ]]; then
         echo "Password cannot be empty. Please try again."
@@ -34,13 +34,20 @@ curl -k -u lab-user:MzExNzEz \
   -d '{"name": "RHEL", "organization": 1}'
 echo; echo "Created an Inventory 'RHEL'"
 
-# Find the Inventory ID of ‘RHEL’ & Create a host ‘node1’
+read -p "Enter the Bastion Node's FQDN: " BASTION_HOST
+while [[ -z "$BASTION_HOST" ]]; do
+    read -p "Enter the Bastion Node's FQDN: " BASTION_HOST
+    if [[ -z "$BASTION_HOST" ]]; then
+        echo "FQDN cannot be empty. Please try again."
+    fi
+done
+
+# Find the Inventory ID of ‘RHEL’ & add a host
 INVENTORY_ID=$(curl -sk -u "$USERNAME:$PASSWORD" "$CONTROLLER_URL/inventories/?name=RHEL" | jq -r '.results[0].id')
-Nginx_Server=`nslookup node1 | grep -i Name | awk '{print $2}'`
 curl -sk -u "$USERNAME:$PASSWORD" \
   -H "Content-Type: application/json" \
   -X POST "$CONTROLLER_URL/hosts/" \
-  -d "{\"name\": \"$Nginx_Server\", \"inventory\": $INVENTORY_ID}"
+  -d "{\"name\": \"$BASTION_HOST\", \"inventory\": $INVENTORY_ID}"
 echo; echo "Added an host to the Inventory 'RHEL'"
 
 # Find the Credential ID
