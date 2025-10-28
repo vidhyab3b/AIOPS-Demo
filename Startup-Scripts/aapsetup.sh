@@ -32,8 +32,9 @@ curl -k -u "$AAP_USERNAME:$AAP_PASSWORD" \
   -H "Content-Type: application/json" \
   -X POST "$CONTROLLER_URL/inventories/" \
   -d "{\"name\": \"RHEL\", \"organization\": $ORG_ID}"
-echo; echo "Created an Inventory 'RHEL'"
+echo; echo; echo "Created an Inventory 'RHEL'"
 
+# Prompt for Bastion Node's Hostname
 read -p "Enter the Bastion Node's FQDN: " BASTION_HOST
 while [[ -z "$BASTION_HOST" ]]; do
     read -p "Enter the Bastion Node's FQDN: " BASTION_HOST
@@ -42,17 +43,76 @@ while [[ -z "$BASTION_HOST" ]]; do
     fi
 done
 
+# Prompt for Bastion Node's Username
+read -p "Enter the Bastion Node's Username: " USERNAME
+while [[ -z "$USERNAME" ]]; do
+    read -p "Enter the Bastion Node's Username: " USERNAME
+    if [[ -z "$USERNAME" ]]; then
+        echo "Username cannot be empty. Please try again."
+    fi
+done
+
+# Prompt for Bastion Node's Password (silent input)
+read -s -p "Enter the Bastion Node's Password: " PASSWORD
+while [[ -z "$PASSWORD" ]]; do
+    read -s -p "Enter the Bastion Node's Password: " PASSWORD
+    echo  # Move to a new line after password input
+    if [[ -z "$PASSWORD" ]]; then
+        echo "Password cannot be empty. Please try again."
+    fi
+done
+
 # Find the Inventory ID of ‘RHEL’ & add a host
 INVENTORY_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/inventories/?name=RHEL" | jq -r '.results[0].id')
 curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
   -H "Content-Type: application/json" \
   -X POST "$CONTROLLER_URL/hosts/" \
-  -d "{\"name\": \"Nginx Server\", \"inventory\": $INVENTORY_ID}"
-echo; echo "Added an host to the Inventory 'RHEL'"
+  -d "{\"name\": \"Nginx Server\", \"inventory\": $INVENTORY_ID, \"variables\": \"ansible_host: $BASTION_HOST\"}"
+echo; echo; echo "Added the Nginx Server to the Inventory 'RHEL'"
 
-# Find the Credential ID
-// CRED_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
-  // "$CONTROLLER_URL/credentials/?name=lab-credential" | \
-  // jq -r '.results[0].id')
+# Find the Credential Type of Machine & Create a Credential
+CRED_TYPE_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/credential_types/?page_size=100" |  jq -r '.results[] | select(.name=="Machine") | .id')
+curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -X POST "$CONTROLLER_URL/credentials/" \
+  -d "{
+    \"name\": \"Nginx Server\",
+    \"organization\": $ORG_ID,
+    \"credential_type\": $CRED_TYPE_ID,
+    \"inputs\": {
+        \"username\": \"$USERNAME\",
+        \"password\": \"$PASSWORD\",
+        \"become_method\": \"sudo\"
+    }
+}"
+echo; echo; echo "Credential 'Nginx Server' created successfully."
 
-// echo; echo "Configured the credentials"
+# Create the Project
+curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -X POST "$CONTROLLER_URL/projects/" \
+  -d "{
+    \"name\": \"AIOPS REPO\",
+    \"description\": \"Project for AIOPS playbooks\",
+    \"organization\": $ORG_ID,
+    \"scm_type\": \"git\",
+    \"scm_url\": \"https://github.com/vidhyab3b/AIOPS-Demo.git\",
+    \"scm_branch\": \"main\"
+}"
+echo; echo; echo "Created the Project 'AIOPS REPO'"
+
+# Create the Project
+curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -X POST "$CONTROLLER_URL/job_templates/" \
+  -d "{
+    \"name\": \"DB Update\",
+    \"description\": \"Run DB update playbook\",
+    \"organization\": $ORG_ID,
+    \"inventory\": $INVENTORY_ID,
+    \"project\": $PROJECT_ID,
+    \"playbook\": \"insert_error_message.yml\",
+    \"credentials\": [$CREDENTIAL_ID],
+    \"execution_environment\": $EE_ID
+}"
+echo; echo; echo "Created a Job Template 'DB Update'"
