@@ -1,6 +1,7 @@
 #! /bin/bash
 
 cd /root
+read -p "Enter the GIT TOKEN of AIOPS Repo: " GIT_TOKEN
 REPO_URL="https://vidhyab3b:"$GIT_TOKEN"@github.com/vidhyab3b/AIOPS.git"
 COMMIT_MSG="Modify vite.config.js and store.js"
 WORK_DIR="temp_git_repo_$$"
