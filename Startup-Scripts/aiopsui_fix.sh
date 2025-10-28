@@ -18,8 +18,9 @@ sed -i "s|^\s*allowedHosts: \[.*\]|      allowedHosts: ['$UI_ROUTE_URL']|" AIOPS
 
 echo "Making Changes in store.js"
 PROXY_ROUTE_URL=$(oc get route aiproxy -o jsonpath='{.spec.host}')
-sed -i "s|^\s*baseurl: \".*\"|    baseurl: \"http://$PROXY_ROUTE_URL\",|" AIOPSUI/src/js/store.js
-sed -i "s|^\s*aiproxybaseurl: \".*\"|    aiproxybaseurl: \"http://$PROXY_ROUTE_URL\",|" AIOPSUI/src/js/store.js
+sed -i "s|^\s*baseurl: \".*\"[,]*|    baseurl: \"http://$PROXY_ROUTE_URL\",|" AIOPSUI/src/js/store.js
+sed -i "s|^\s*aiproxybaseurl: \".*\"[,]*|    aiproxybaseurl: \"http://$PROXY_ROUTE_URL\",|" AIOPSUI/src/js/store.js
+
 
 echo "Adding & commiting the changes"
 git config --global user.name "Vidhya"
