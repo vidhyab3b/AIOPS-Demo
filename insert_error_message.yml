@@ -10,14 +10,15 @@
     server_name: "{{ bastion_host }}"
     error_msg: "Nginx service is not running."
     status_msg: "Open"
-    # This will be dynamically templated during playbook execution
+    # SQL templates
     sql_insert_template: >
-       INSERT INTO Error_Table (Error_Message, Server_Name, Status) 
-       VALUES ('{{ error_msg }}', '{{ server_name }}', '{{ status_msg }}');
+      INSERT INTO Error_Table (Error_Message, Server_Name, Status) 
+      VALUES ('{{ error_msg }}', '{{ server_name }}', '{{ status_msg }}');
     sql_select_template: >
-       SELECT COUNT(*) FROM Error_Table 
-       WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
-       AND created_at >= NOW() - INTERVAL 1 HOUR;
+      SELECT COUNT(*) FROM Error_Table 
+      WHERE LOWER(Server_Name) = LOWER('{{ server_name }}') 
+        AND LOWER(Error_Message) = LOWER('{{ error_msg }}')
+        AND created_at >= NOW() - INTERVAL 1 HOUR;
      
   tasks:
     - name: Ensure MySQL Shell (mysqlsh) is installed
@@ -25,17 +26,18 @@
         name: mysql-shell
         state: present
 
-    - name: Check if the Server Name & Error already exist
-      ansible.builtin.shell: |
-        mysqlsh --sql -h {{ db_host }} -u {{ db_user }} -p{{ db_pass }} --schema {{ db_name }} --execute "{{ sql_select_template }}"
+    - name: Check if a recent similar entry exists
+      ansible.builtin.shell: >
+        mysqlsh --sql -h {{ db_host }} -u {{ db_user }} -p{{ db_pass }} --schema {{ db_name }} --execute "{{ sql_select_template }}" | tail -n1
       register: duplicate_check
-        
+      changed_when: false
+
     - name: Show found status
       debug:
-        msg: "Error already exists for the server {{ server_name }}"
-      when: duplicate_check.stdout | int > 0
+        msg: "Error already exists for the server {{ server_name }} within the last hour"
+      when: duplicate_check.stdout | trim | int > 0
       
-    - name: Insert entry into MySQL database
-      ansible.builtin.shell: |
+    - name: Insert entry into MySQL database if not duplicate
+      ansible.builtin.shell: >
         mysqlsh --sql -h {{ db_host }} -u {{ db_user }} -p{{ db_pass }} --schema {{ db_name }} --execute "{{ sql_insert_template }}"
-      when: duplicate_check.stdout | int == 0
+      when: duplicate_check.stdout | trim | int == 0
