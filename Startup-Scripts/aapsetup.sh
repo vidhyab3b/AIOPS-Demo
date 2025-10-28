@@ -30,8 +30,8 @@ done
 ORG_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/organizations/" | jq -r '.results[] | select(.name=="Default") | .id')
 curl -k -u "$AAP_USERNAME:$AAP_PASSWORD" \
   -H "Content-Type: application/json" \
-  -X POST $CONTROLLER_URL/inventories/ \
-  -d '{"name": "RHEL", "organization": 1}'
+  -X POST "$CONTROLLER_URL/inventories/" \
+  -d "{\"name\": \"RHEL\", \"organization\": $ORG_ID}"
 echo; echo "Created an Inventory 'RHEL'"
 
 read -p "Enter the Bastion Node's FQDN: " BASTION_HOST
