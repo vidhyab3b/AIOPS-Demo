@@ -32,5 +32,7 @@ git commit -m "$COMMIT_MSG"
 echo "Pushing to Git Repository"
 git push
 
+cd /root; rm -rf "$WORK_DIR"
+
 echo "Building the AIOps UI Deployment with the Changes"
 oc start-build aiopsui --follow
