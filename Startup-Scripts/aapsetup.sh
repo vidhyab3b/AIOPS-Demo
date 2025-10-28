@@ -97,7 +97,8 @@ curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
     \"organization\": $ORG_ID,
     \"scm_type\": \"git\",
     \"scm_url\": \"https://github.com/vidhyab3b/AIOPS-Demo.git\",
-    \"scm_branch\": \"main\"
+    \"scm_branch\": \"main\",
+    \"scm_update_on_launch\": true
 }"
 echo; echo; echo "Created the Project 'AIOPS REPO'"
 
@@ -105,9 +106,7 @@ PROJECT_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/projects
 CREDENTIAL_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/credentials/" | jq -r '.results[] | select(.name=="Nginx Server") | .id')
 EE_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/execution_environments/" | jq -r '.results[] | select(.name=="Default execution environment") | .id')
 
-echo "Execution Environment ID: $EE_ID"
-
-# Create the Project
+# Create the Job Template
 curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
   -H "Content-Type: application/json" \
   -X POST "$CONTROLLER_URL/job_templates/" \
@@ -118,12 +117,19 @@ curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
     \"inventory\": $INVENTORY_ID,
     \"project\": $PROJECT_ID,
     \"playbook\": \"insert_error_message.yml\",
-    \"credentials\": [$CREDENTIAL_ID],
+    \"credentials\": [{\"id\": $CREDENTIAL_ID}],
     \"execution_environment\": $EE_ID,
     \"job_type\": \"run\",
-    \"extra_vars\": {
-      "bastion_host": "'"$BASTION_HOST"'"
-    }
+    \"ask_credential_on_launch\": false,
+    \"extra_vars\": \"{\\\"bastion_host\\\": \\\"$BASTION_HOST\\\"}\"
+}"
+
+TEMPLATE_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/job_templates/?name=DB%20Update" | jq -r '.results[0].id')
+curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -X POST "$CONTROLLER_URL/job_templates/$TEMPLATE_ID/credentials/" \
+  -d "{
+    \"id\": $CREDENTIAL_ID
 }"
 echo; echo; echo "Created a Job Template 'DB Update'"
 
