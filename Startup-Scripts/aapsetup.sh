@@ -120,7 +120,10 @@ curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
     \"playbook\": \"insert_error_message.yml\",
     \"credentials\": [$CREDENTIAL_ID],
     \"execution_environment\": $EE_ID,
-    \"job_type\": \"run\"
+    \"job_type\": \"run\",
+    \"extra_vars\": {
+      "bastion_host": "'"$BASTION_HOST"'"
+    }
 }"
 echo; echo; echo "Created a Job Template 'DB Update'"
 
