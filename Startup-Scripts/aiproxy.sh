@@ -31,8 +31,7 @@ oc set resources deployment/aiproxy \
 oc rollout restart deployment/aiproxy
 
 oc patch svc aiproxy -n aiops --type='json' -p='[{"op": "replace", "path": "/spec/ports/0/port", "value": 443}]'
-oc expose svc aiproxy
-
+oc create route edge aiproxy --service=aiproxy --port=8002-tcp --insecure-policy=Redirect
 
 
 
