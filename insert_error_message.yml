@@ -7,7 +7,7 @@
     db_user: "mysql"
     db_pass: "redhat"
     db_name: "aiopsdb"
-    server_name: "{{ bastion_host }}""
+    server_name: "{{ bastion_host }}"
     error_msg: "Nginx service is not running."
     status_msg: "Open"
     # This will be dynamically templated during playbook execution
