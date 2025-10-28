@@ -35,4 +35,4 @@ oc patch svc aiops-qks -n aiops --type='json' -p='[
     "path": "/spec/ports/1"
   }
 ]'
-oc expose svc aiops-qks
+oc create route edge aiops-qks --service=aiops-qks --port=8080-tcp --insecure-policy=Redirect
