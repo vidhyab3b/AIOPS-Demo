@@ -130,9 +130,9 @@ LOCAL_PORT=3306
 REMOTE_PORT=3306
 LOG_FILE="port-forward.log"
 
-# Check if the port-forward is already running
-if lsof -i :"$LOCAL_PORT" >/dev/null 2>&1; then
-    echo "Port $LOCAL_PORT is already in use. Assuming port-forward is running."
+# Check if an oc port-forward is already running for this deployment and port
+if pgrep -f "oc port-forward deployment/$DEPLOYMENT $LOCAL_PORT:$REMOTE_PORT -n $NAMESPACE" >/dev/null; then
+    echo "Port-forward for $DEPLOYMENT:$REMOTE_PORT already running on localhost:$LOCAL_PORT"
 else
     echo "Starting port-forward from localhost:$LOCAL_PORT to $DEPLOYMENT:$REMOTE_PORT in namespace $NAMESPACE"
     nohup oc port-forward deployment/$DEPLOYMENT $LOCAL_PORT:$REMOTE_PORT -n $NAMESPACE > $LOG_FILE 2>&1 &
