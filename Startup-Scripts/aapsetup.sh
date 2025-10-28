@@ -27,7 +27,7 @@ while [[ -z "$AAP_PASSWORD" ]]; do
 done
 
 # Find the Org ID of ‘Default’ & Create an Inventory ‘RHEL’
-ORG_ID=$(curl -sk -u "$USERNAME:$PASSWORD" "$CONTROLLER_URL/organizations/" | jq -r '.results[] | select(.name=="Default") | .id')
+ORG_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/organizations/" | jq -r '.results[] | select(.name=="Default") | .id')
 curl -k -u lab-user:MzExNzEz \
   -H "Content-Type: application/json" \
   -X POST $CONTROLLER_URL/inventories/ \
@@ -43,16 +43,16 @@ while [[ -z "$BASTION_HOST" ]]; do
 done
 
 # Find the Inventory ID of ‘RHEL’ & add a host
-INVENTORY_ID=$(curl -sk -u "$USERNAME:$PASSWORD" "$CONTROLLER_URL/inventories/?name=RHEL" | jq -r '.results[0].id')
-curl -sk -u "$USERNAME:$PASSWORD" \
+INVENTORY_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/inventories/?name=RHEL" | jq -r '.results[0].id')
+curl -sk -u "$AAP_USERNAME:$PASSWORD" \
   -H "Content-Type: application/json" \
   -X POST "$CONTROLLER_URL/hosts/" \
   -d "{\"name\": \"$BASTION_HOST\", \"inventory\": $INVENTORY_ID}"
 echo; echo "Added an host to the Inventory 'RHEL'"
 
 # Find the Credential ID
-CRED_ID=$(curl -sk -u "$USERNAME:$PASSWORD" \
-  "$CONTROLLER_URL/credentials/?name=lab-credential" | \
-  jq -r '.results[0].id')
+// CRED_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
+  // "$CONTROLLER_URL/credentials/?name=lab-credential" | \
+  // jq -r '.results[0].id')
 
-echo; echo "Configured the credentials"
+// echo; echo "Configured the credentials"
