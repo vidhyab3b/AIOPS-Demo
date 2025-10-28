@@ -19,11 +19,10 @@ sed -i "s|^quarkus\.http\.cors\.origins=.*|quarkus.http.cors.origins=http://loca
 
 echo; echo "Making Changes in store.js"
 PROXY_ROUTE_URL=$(oc get route aiproxy -o jsonpath='{.spec.host}')
-sed -i "s|^\s*aiproxybaseurl: \".*\"[,]*|    aiproxybaseurl: \`\${window.location.protocol}//$PROXY_ROUTE_URL\`,|" AIOPSUI/src/js/store.js
-
-echo; echo "Making Changes in store.js"
 QKS_ROUTE_URL=$(oc get route aiops-qks -o jsonpath='{.spec.host}')
-sed -i "s|^\s*baseurl: \".*\"[,]*|    baseurl: \`\${window.location.protocol}//$QKS_ROUTE_URL\`,|" AIOPSUI/src/js/store.js
+
+sed -i "s|^\s*aiproxybaseurl: \".*\"[,]*|    aiproxybaseurl: \"https://$PROXY_ROUTE_URL\",|" AIOPSUI/src/js/store.js
+sed -i "s|^\s*baseurl: \".*\"[,]*|    baseurl: \"https://$QKS_ROUTE_URL\",|" AIOPSUI/src/js/store.js
 
 echo; echo "Adding & commiting the changes"
 git config --global user.name "Vidhya"
