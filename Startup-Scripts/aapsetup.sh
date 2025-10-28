@@ -28,7 +28,7 @@ done
 
 # Find the Org ID of ‘Default’ & Create an Inventory ‘RHEL’
 ORG_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/organizations/" | jq -r '.results[] | select(.name=="Default") | .id')
-curl -k -u lab-user:MzExNzEz \
+curl -k -u "$AAP_USERNAME:$AAP_PASSWORD" \
   -H "Content-Type: application/json" \
   -X POST $CONTROLLER_URL/inventories/ \
   -d '{"name": "RHEL", "organization": 1}'
