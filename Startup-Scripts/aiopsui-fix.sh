@@ -15,7 +15,7 @@ git remote set-url origin $REPO_URL
 echo; echo "Making Changes in vite.config.js"
 UI_ROUTE_URL=$(oc get route aiopsui -o jsonpath='{.spec.host}')
 sed -i "s|^\s*allowedHosts: \[.*\]|      allowedHosts: ['$UI_ROUTE_URL']|" AIOPSUI/vite.config.js
-sed -i "s|^quarkus\.http\.cors\.origins=.*|quarkus.http.cors.origins=http://localhost:8000,http://localhost,http://$UI_ROUTE_URL|" aiops_q_ms_v2/src/main/resources/application.properties
+sed -i "s|^quarkus\.http\.cors\.origins=.*|quarkus.http.cors.origins=http://localhost:8000,http://localhost,https://$UI_ROUTE_URL|" aiops_q_ms_v2/src/main/resources/application.properties
 
 echo; echo "Making Changes in store.js"
 PROXY_ROUTE_URL=$(oc get route aiproxy -o jsonpath='{.spec.host}')
