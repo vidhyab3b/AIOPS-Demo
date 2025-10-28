@@ -45,3 +45,18 @@ oc start-build aiopsui --follow
 
 echo; echo "Building the AIOps Quarkus Deployment with the Changes"
 oc start-build aiops-qks --follow
+
+NAMESPACE="aiops"
+DEPLOYMENT="mysql-db"
+LOCAL_PORT=3306
+REMOTE_PORT=3306
+LOG_FILE="port-forward.log"
+
+# Check if the port-forward is already running
+if lsof -i :"$LOCAL_PORT" >/dev/null 2>&1; then
+    echo "Port $LOCAL_PORT is already in use. Assuming port-forward is running."
+else
+    echo "Starting port-forward from localhost:$LOCAL_PORT to $DEPLOYMENT:$REMOTE_PORT in namespace $NAMESPACE"
+    nohup oc port-forward deployment/$DEPLOYMENT $LOCAL_PORT:$REMOTE_PORT -n $NAMESPACE > $LOG_FILE 2>&1 &
+    echo "Port-forward started in background. Logs are in $LOG_FILE"
+fi
