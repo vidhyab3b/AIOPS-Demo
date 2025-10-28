@@ -44,10 +44,10 @@ done
 
 # Find the Inventory ID of ‘RHEL’ & add a host
 INVENTORY_ID=$(curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" "$CONTROLLER_URL/inventories/?name=RHEL" | jq -r '.results[0].id')
-curl -sk -u "$AAP_USERNAME:$PASSWORD" \
+curl -sk -u "$AAP_USERNAME:$AAP_PASSWORD" \
   -H "Content-Type: application/json" \
   -X POST "$CONTROLLER_URL/hosts/" \
-  -d "{\"name\": \"$BASTION_HOST\", \"inventory\": $INVENTORY_ID}"
+  -d "{\"name\": \"Nginx Server\", \"inventory\": $INVENTORY_ID}"
 echo; echo "Added an host to the Inventory 'RHEL'"
 
 # Find the Credential ID
