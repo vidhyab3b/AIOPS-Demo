@@ -244,3 +244,11 @@ CREATE TABLE Playbook_Status (
     Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );"
+
+mysqlsh --host=127.0.0.1 --user=mysql --password=redhat --port=3306 --sql -e "
+USE aiopsdb;
+DROP TABLE IF EXISTS Error_RCA_SEQ;
+CREATE TABLE Error_RCA_SEQ (
+   next_val bigint(20) NOT NULL,
+   id bigint(20) NOT NULL
+)ENGINE=InnoDB DEFAULT CHARSET=latin1;"
