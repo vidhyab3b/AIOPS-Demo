@@ -5,7 +5,7 @@
     - name: URL to check
       ansible.eda.url_check:
         urls:
-          - "http://{{ bastion_host }}"
+          - "http://{{ bastion_host }}:8080"
 
   rules:
     - name: Insert Error Message Info into MySQL DB
