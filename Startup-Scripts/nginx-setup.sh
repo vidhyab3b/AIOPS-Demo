@@ -6,11 +6,6 @@ sudo yum install nginx -y
 HTML_DIR="/var/www/html"
 NGINX_CONF="/etc/nginx/nginx.conf"
 
-# Change nginx listen port to 8080 (IPv4 and IPv6)
-sudo sed -i 's/listen\s\+80\(\s\+default_server\)\?;/listen 8080\1;/' "$NGINX_CONF"
-sudo sed -i 's/listen\s\+\[::\]:80\(\s\+default_server\)\?;/listen [::]:8080\1;/' "$NGINX_CONF"
-echo "Configured nginx to listen in port 8080 in the `hostname`"
-
 mkdir -p "$HTML_DIR"
 
 cat > "$HTML_DIR/index.html" <<'EOF'
