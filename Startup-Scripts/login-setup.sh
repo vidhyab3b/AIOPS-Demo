@@ -53,6 +53,9 @@ while [[ -z "$OCP_PASSWORD" ]]; do
     fi
 done
 
+# Prompt for GIT Token
+read -p "Enter the GIT TOKEN of AIOPS Repo: " GIT_TOKEN
+
 echo "export BASTION_HOST=\"$BASTION_HOST\"" > /root/aiops_ocp_demojam.env
 echo "export USERNAME=\"$USERNAME\"" >> /root/aiops_ocp_demojam.env
 echo "export PASSWORD=\"$PASSWORD\"" >> /root/aiops_ocp_demojam.env
@@ -60,3 +63,5 @@ echo "export PASSWORD=\"$PASSWORD\"" >> /root/aiops_ocp_demojam.env
 echo "export OCP_API_URL=\"$OCP_API_URL\"" >> /root/aiops_ocp_demojam.env
 echo "export OCP_USERNAME=\"$OCP_USERNAME\"" >> /root/aiops_ocp_demojam.env
 echo "export OCP_PASSWORD=\"$OCP_PASSWORD\"" >> /root/aiops_ocp_demojam.env
+
+echo "export GIT_TOKEN=\"$GIT_TOKEN\"" >> /root/aiops_ocp_demojam.env
