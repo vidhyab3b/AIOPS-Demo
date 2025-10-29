@@ -2,15 +2,15 @@
   hosts: all
   become: true
   tasks:
-    - name: Check Nginx status
+    - name: Check Nginx service status
       systemd:
         name: nginx
         state: started
       register: nginx_status
 
-    - name: Start Nginx if not running
+    - name: Start Nginx service if not running
       systemd:
         name: nginx
         state: started
-      when: nginx_status.status.ActiveState != "active"
+      when: nginx_status.status.ActiveState != "active" or nginx_status.status.SubState != "running"
 
