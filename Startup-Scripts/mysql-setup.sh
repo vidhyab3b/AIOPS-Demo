@@ -206,7 +206,7 @@ CREATE TABLE Error_RCA (
 mysqlsh --host=127.0.0.1 --user=mysql --password=redhat --port=3306 --sql -e "
 USE aiopsdb;
 CREATE TABLE Playbook_Status (
-    id BIGINT PRIMARY KEY,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     Error_ID BIGINT,
     RCA_ID BIGINT,
     server_Name VARCHAR(255),
