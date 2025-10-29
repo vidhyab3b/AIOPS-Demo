@@ -38,8 +38,9 @@ git push
 cd /root; rm -rf "$WORK_DIR"
 
 echo; echo "Setting a secret and redeploying AI Proxy"
-oc create secret generic git-secret --from-literal=GIT_TOKEN="$GIT_TOKEN"
-oc set env deployment/aiproxy --from=secret/git-secret
+oc create secret generic proxy-secret --from-literal=GIT_TOKEN="$GIT_TOKEN" --from-literal=CONTROLLER_URL="$CONTROLLER_URL" \
+                                    --from-literal=AAP_USERNAME="$AAP_USERNAME" --from-literal=AAP_PASSWORD="$AAP_PASSWORD"
+oc set env deployment/aiproxy --from=secret/proxy-secret
 
 echo; echo "Building the AIOps UI Deployment with the Changes"
 oc start-build aiopsui --follow
