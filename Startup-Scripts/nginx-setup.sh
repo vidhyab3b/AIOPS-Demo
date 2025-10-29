@@ -32,8 +32,14 @@ sed -i '/server_name  _;/a \
 sed -i '/proxy_pass/d' "$NGINX_CONF"
 sed -i '/return 200/d' "$NGINX_CONF"
 
-nginx -t
-sudo systemctl start nginx
-sudo systemctl enable nginx
+chown -R nginx:nginx /var/www/html
+chmod -R 755 /var/www/html
+semanage fcontext -a -t httpd_sys_content_t "/var/www/html(/.*)?"
+restorecon -Rv /var/www/html
 
+nginx -t
+systemctl start nginx
+systemctl enable nginx
+
+nginx -s reload
 echo "Started & enabled nginx in systemctl"
