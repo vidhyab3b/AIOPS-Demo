@@ -252,3 +252,7 @@ CREATE TABLE Error_RCA_SEQ (
    next_val bigint(20) NOT NULL,
    id bigint(20) NOT NULL
 )ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+
+mysqlsh --host=127.0.0.1 --user=mysql --password=redhat --port=3306 --sql -e "
+USE aiopsdb;
+INSERT INTO Error_RCA_SEQ (next_val, id) VALUES (51,	1);"
