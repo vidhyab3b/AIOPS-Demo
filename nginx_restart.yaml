@@ -1,9 +1,8 @@
 - name: Ensure Nginx is running
-  hosts: all  # Target all hosts or specify a group
-  become: true  # Run tasks with elevated privileges (sudo)
-
+  hosts: all
+  become: true
   tasks:
-    - name: Check Nginx status
+    - name: Check Nginx service status
       systemd:
         name: nginx
         state: started
@@ -15,13 +14,7 @@
         state: started
       when: nginx_status.status.ActiveState != "active"
 
-    - name: Reload Nginx after start (optional, only if configuration needs to be applied)
-      systemd:
-        name: nginx
-        state: reloaded
-      when: nginx_status.status.ActiveState != "active" and nginx_status.status.LoadState == "loaded"
-
-    - name: Display Nginx status
+    - name: Display Nginx status (optional)
       debug:
-        msg: "Nginx status: {{ nginx_status }}"
+        msg: "Nginx service is now {{ nginx_status.status.ActiveState }}"
 
