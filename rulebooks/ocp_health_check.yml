@@ -1,15 +1,14 @@
+---
 - name: OpenShift Health Monitor
   hosts: localhost
+
   sources:
-    - name: oc_health_check_job
-      ansible.eda.awx_event:
-        job_template: "OpenShift Health Check"  # Your playbook as a Job Template
-        organization: "Default"
-        event: "job_completed"  # Trigger when job completes
+    - ansible.eda.webhook:
+        port: 5000
 
   rules:
-    - name: Trigger Alert Only on Failure
-      condition: event.status == "failed"  # Only when the Job Template fails
+    - name: CO degraded → trigger template
+      condition: event.payload.status == "failed"
       action:
         run_job_template:
           name: "OpenShift Health Alert"
