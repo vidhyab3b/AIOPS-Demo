@@ -1,16 +1,17 @@
 ---
-- name: Check status
-  hosts: all
-  sources:
-    - name: URL to check
-      ansible.eda.url_check:
-        urls:
-          - "http://{{ bastion_host }}"
+# EDA Rulebook for OpenShift Health Monitoring
+name: openshift_health_monitor
+sources:
+  - name: periodic_health_check
+    type: "ansible.eda.execution_queue"
+    parameters:
+      playbook: /opt/ansible/playbooks/openshift_health_check.yml
 
-  rules:
-    - name: Insert Error Message Info into MySQL DB
-      condition: event.url_check.status == "down"
-      action:
-        run_job_template:
-          name: "Email Notification"
-          organization: "Default"
+triggers:
+  - name: trigger_alert_on_failure
+    condition: "{{ event.status == 'failed' }}"
+    actions:
+      - name: run_alert_template
+        type: ansible.eda.trigger_template
+        parameters:
+          template: openshift_health_alert_template
