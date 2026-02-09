@@ -27,7 +27,7 @@
       command: oc get pods -A
       register: pods
       failed_when: >
-        pods.stdout_lines | select("search", "0/1|0/2|0/3|...|NotRunning") | list | length > 0
+        pods.stdout_lines | select("search", "(0/1|0/2|0/3|Error|CrashLoopBackOff|Pending)") | list | length > 0
 
     - name: Notify EDA only on failure
       when: co.failed or mcp.failed or nodes.failed or certs.failed or pods.failed
