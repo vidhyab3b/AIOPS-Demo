@@ -19,7 +19,7 @@
         password: "{{ lookup('env', 'GMAIL_APP_PASSWORD') }}"
         to: "{{ email_to }}"
         from: "{{ email_from }}"
-        subject: "🚨 OpenShift Health Alert"
+        subject: "OpenShift Health Alert"
         body: |
           OpenShift Health Issue Detected
 
