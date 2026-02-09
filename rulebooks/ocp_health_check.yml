@@ -5,10 +5,10 @@ sources:
   - name: periodic_health_check
     type: "ansible.eda.execution_queue"
     parameters:
-      playbook: playbooks/openshift_health_check.yml
+      playbook_path: playbooks/openshift_health_check.yml
 
-triggers:
-  - name: trigger_alert_on_failure
+rules:
+  - name: alert_on_failure
     condition: "{{ event.status == 'failed' }}"
     actions:
       - name: run_alert_template
