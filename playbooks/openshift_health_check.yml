@@ -5,46 +5,34 @@
     eda_webhook_url: "http://eda-route:5000"  # Replace with your EDA webhook URL
 
   tasks:
+
     - name: Check Cluster Operators
       command: oc get co -o json
       register: co_json
       failed_when: >
-        {{
-          (co_json.stdout | from_json).items | selectattr('status.conditions','defined') |
-          selectattr('status.conditions','select', lambda cond: cond.type == 'Degraded' and cond.status == 'True') |
-          list | length > 0
-        }}
+        (co_json.stdout | from_json).items | selectattr('status.conditions', 'defined') |
+        selectattr('status.conditions', 'search', 'Degraded') | list | length > 0
 
     - name: Check Machine Config Pools
       command: oc get mcp -o json
       register: mcp_json
       failed_when: >
-        {{
-          (mcp_json.stdout | from_json).items | selectattr('status.conditions','defined') |
-          selectattr('status.conditions','select', lambda cond: cond.type == 'Degraded' and cond.status == 'True') |
-          list | length > 0
-        }}
+        (mcp_json.stdout | from_json).items | selectattr('status.conditions', 'defined') |
+        selectattr('status.conditions', 'search', 'Degraded') | list | length > 0
 
     - name: Check Nodes
       command: oc get nodes -o json
       register: nodes_json
       failed_when: >
-        {{
-          (nodes_json.stdout | from_json).items | selectattr('spec.unschedulable','defined') |
-          selectattr('status.conditions','defined') |
-          selectattr('status.conditions','select', lambda cond: cond.type == 'Ready' and cond.status != 'True') |
-          list | length > 0
-        }}
+        (nodes_json.stdout | from_json).items | selectattr('status.conditions', 'defined') |
+        selectattr('status.conditions', 'search', 'NotReady') | list | length > 0
 
     - name: Check Certificates
       command: oc get cert -A -o json
       register: certs_json
       failed_when: >
-        {{
-          (certs_json.stdout | from_json).items | selectattr('status.conditions','defined') |
-          selectattr('status.conditions','select', lambda cond: cond.type == 'Ready' and cond.status == 'False') |
-          list | length > 0
-        }}
+        (certs_json.stdout | from_json).items | selectattr('status.conditions', 'defined') |
+        selectattr('status.conditions', 'search', 'False') | list | length > 0
 
     - name: Check Pods
       command: oc get pods -A
