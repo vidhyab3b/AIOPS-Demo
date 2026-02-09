@@ -1,3 +1,4 @@
+---
 - hosts: localhost
   gather_facts: no
 
@@ -7,12 +8,40 @@
       register: co
       failed_when: "'Degraded=True' in co.stdout"
 
+    - name: Check Machine Config Pools
+      command: oc get mcp
+      register: mcp
+      failed_when: "'Degraded=True' in mcp.stdout"
+
+    - name: Check Nodes
+      command: oc get nodes
+      register: nodes
+      failed_when: "'NotReady' in nodes.stdout or 'SchedulingDisabled' in nodes.stdout"
+
+    - name: Check Certificates
+      command: oc get cert -A
+      register: certs
+      failed_when: "'False' in certs.stdout"
+
+    - name: Check Pods
+      command: oc get pods -A
+      register: pods
+      failed_when: >
+        pods.stdout_lines | select("search", "0/1|0/2|0/3|...|NotRunning") | list | length > 0
+
     - name: Notify EDA only on failure
-      when: co.failed
+      when: co.failed or mcp.failed or nodes.failed or certs.failed or pods.failed
       uri:
-        url: http://eda-route:5000
+        url: "http://eda-route:5000"    # Replace with your EDA webhook URL
         method: POST
         body_format: json
         body:
           status: failed
-          check: cluster_operators
+          checks_failed: >
+            {% set list=[] %}
+            {% if co.failed %}{{ list.append('ClusterOperators') }}{% endif %}
+            {% if mcp.failed %}{{ list.append('MCP') }}{% endif %}
+            {% if nodes.failed %}{{ list.append('Nodes') }}{% endif %}
+            {% if certs.failed %}{{ list.append('Certificates') }}{% endif %}
+            {% if pods.failed %}{{ list.append('Pods') }}{% endif %}
+            {{ list }}
