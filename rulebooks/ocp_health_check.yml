@@ -1,0 +1,16 @@
+---
+- name: Check status
+  hosts: all
+  sources:
+    - name: URL to check
+      ansible.eda.url_check:
+        urls:
+          - "http://{{ bastion_host }}"
+
+  rules:
+    - name: Insert Error Message Info into MySQL DB
+      condition: event.url_check.status == "down"
+      action:
+        run_job_template:
+          name: "Email Notification"
+          organization: "Default"
