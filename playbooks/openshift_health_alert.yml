@@ -1,0 +1,27 @@
+---
+- name: OpenShift Health Alert
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    email_to: ops-team@example.com
+    email_from: aap@example.com
+    smtp_host: smtp.example.com
+    smtp_port: 25
+
+  tasks:
+    - name: Send OpenShift health alert email
+      mail:
+        host: "{{ smtp_host }}"
+        port: "{{ smtp_port }}"
+        to: "{{ email_to }}"
+        from: "{{ email_from }}"
+        subject: "🚨 OpenShift Health Alert"
+        body: |
+          OpenShift Health Issue Detected
+
+          Check      : {{ check | default('unknown') }}
+          Status     : {{ status | default('failed') }}
+          Time       : {{ ansible_date_time.iso8601 }}
+
+          This alert was generated automatically by Ansible EDA.
