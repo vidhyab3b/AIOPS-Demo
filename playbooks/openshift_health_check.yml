@@ -1,58 +1,47 @@
 ---
 - hosts: localhost
   gather_facts: no
+
   vars:
-    eda_webhook_url: "http://eda-route:5000"  # Replace with your EDA webhook URL
+    eda_webhook_url: "http://eda-route:5000"   # Replace with your EDA URL
 
   tasks:
+    - name: Check all pods in all namespaces
+      command: oc get pods -A -o json
+      register: pods_json
+      ignore_errors: yes
 
-    - name: Check Cluster Operators
-      command: oc get co -o json
-      register: co_json
-      failed_when: >
-        (co_json.stdout | from_json).items | selectattr('status.conditions', 'defined') |
-        selectattr('status.conditions', 'search', 'Degraded') | list | length > 0
+    - name: Parse pod statuses safely
+      set_fact:
+        crash_pods: >-
+          {% set list = [] %}
+          {% if pods_json.stdout != "" %}
+            {% set pods = pods_json.stdout | from_json %}
+            {% for pod in pods.items %}
+              {% for cs in pod.status.containerStatuses | default([]) %}
+                {% if cs.state.waiting is defined and cs.state.waiting.reason in ['CrashLoopBackOff','Error'] %}
+                  {% do list.append(pod.metadata.namespace + '/' + pod.metadata.name) %}
+                {% endif %}
+                {% if cs.state.terminated is defined and cs.state.terminated.exitCode != 0 %}
+                  {% do list.append(pod.metadata.namespace + '/' + pod.metadata.name) %}
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          {% endif %}
+          {{ list }}
 
-    - name: Check Machine Config Pools
-      command: oc get mcp -o json
-      register: mcp_json
-      failed_when: >
-        (mcp_json.stdout | from_json).items | selectattr('status.conditions', 'defined') |
-        selectattr('status.conditions', 'search', 'Degraded') | list | length > 0
+    - name: Fail if any crash pods detected
+      fail:
+        msg: "Detected crash pods: {{ crash_pods }}"
+      when: crash_pods | length > 0
 
-    - name: Check Nodes
-      command: oc get nodes -o json
-      register: nodes_json
-      failed_when: >
-        (nodes_json.stdout | from_json).items | selectattr('status.conditions', 'defined') |
-        selectattr('status.conditions', 'search', 'NotReady') | list | length > 0
-
-    - name: Check Certificates
-      command: oc get cert -A -o json
-      register: certs_json
-      failed_when: >
-        (certs_json.stdout | from_json).items | selectattr('status.conditions', 'defined') |
-        selectattr('status.conditions', 'search', 'False') | list | length > 0
-
-    - name: Check Pods
-      command: oc get pods -A
-      register: pods
-      failed_when: >
-        pods.stdout_lines | select("search", "(0/1|0/2|0/3|Error|CrashLoopBackOff|Pending)") | list | length > 0
-
-    - name: Notify EDA only on failure
-      when: co_json.failed or mcp_json.failed or nodes_json.failed or certs_json.failed or pods.failed
+    - name: Notify EDA only if crash pods exist
+      when: crash_pods | length > 0
       uri:
         url: "{{ eda_webhook_url }}"
         method: POST
         body_format: json
         body:
           status: failed
-          checks_failed: >
-            {% set list=[] %}
-            {% if co_json.failed %}{{ list.append('ClusterOperators') }}{% endif %}
-            {% if mcp_json.failed %}{{ list.append('MCP') }}{% endif %}
-            {% if nodes_json.failed %}{{ list.append('Nodes') }}{% endif %}
-            {% if certs_json.failed %}{{ list.append('Certificates') }}{% endif %}
-            {% if pods.failed %}{{ list.append('Pods') }}{% endif %}
-            {{ list }}
+          check: pods
+          crash_pods: "{{ crash_pods }}"
