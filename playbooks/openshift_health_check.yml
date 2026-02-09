@@ -1,42 +1,61 @@
 ---
 - hosts: localhost
   gather_facts: no
+  vars:
+    eda_webhook_url: "http://eda-route:5000"  # Replace with your EDA webhook URL
 
   tasks:
     - name: Check Cluster Operators
       command: oc get co -o json
       register: co_json
       failed_when: >
-        (co_json.stdout | from_json | json_query("items[?status.conditions[?type=='Degraded' && status=='True']]") | length) > 0
+        {{
+          (co_json.stdout | from_json).items | selectattr('status.conditions','defined') |
+          selectattr('status.conditions','select', lambda cond: cond.type == 'Degraded' and cond.status == 'True') |
+          list | length > 0
+        }}
 
     - name: Check Machine Config Pools
       command: oc get mcp -o json
       register: mcp_json
       failed_when: >
-        (mcp_json.stdout | from_json | json_query("items[?status.conditions[?type=='Degraded' && status=='True']]") | length) > 0
+        {{
+          (mcp_json.stdout | from_json).items | selectattr('status.conditions','defined') |
+          selectattr('status.conditions','select', lambda cond: cond.type == 'Degraded' and cond.status == 'True') |
+          list | length > 0
+        }}
 
     - name: Check Nodes
       command: oc get nodes -o json
       register: nodes_json
       failed_when: >
-        (nodes_json.stdout | from_json | json_query("items[?status.conditions[?type=='Ready' && status!='True'] or spec.unschedulable==`true`]") | length) > 0
+        {{
+          (nodes_json.stdout | from_json).items | selectattr('spec.unschedulable','defined') |
+          selectattr('status.conditions','defined') |
+          selectattr('status.conditions','select', lambda cond: cond.type == 'Ready' and cond.status != 'True') |
+          list | length > 0
+        }}
 
     - name: Check Certificates
       command: oc get cert -A -o json
       register: certs_json
       failed_when: >
-        (certs_json.stdout | from_json | json_query("items[?status.conditions[?type=='Ready' && status=='False']]") | length) > 0
+        {{
+          (certs_json.stdout | from_json).items | selectattr('status.conditions','defined') |
+          selectattr('status.conditions','select', lambda cond: cond.type == 'Ready' and cond.status == 'False') |
+          list | length > 0
+        }}
 
     - name: Check Pods
-      command: oc get pods -A -o json
-      register: pods_json
+      command: oc get pods -A
+      register: pods
       failed_when: >
-        (pods_json.stdout | from_json | json_query("items[?status.phase!='Running' && status.phase!='Succeeded']") | length) > 0
+        pods.stdout_lines | select("search", "(0/1|0/2|0/3|Error|CrashLoopBackOff|Pending)") | list | length > 0
 
     - name: Notify EDA only on failure
-      when: co_json.failed or mcp_json.failed or nodes_json.failed or certs_json.failed or pods_json.failed
+      when: co_json.failed or mcp_json.failed or nodes_json.failed or certs_json.failed or pods.failed
       uri:
-        url: "http://eda-route:5000"    # Replace with your EDA webhook URL
+        url: "{{ eda_webhook_url }}"
         method: POST
         body_format: json
         body:
@@ -47,5 +66,5 @@
             {% if mcp_json.failed %}{{ list.append('MCP') }}{% endif %}
             {% if nodes_json.failed %}{{ list.append('Nodes') }}{% endif %}
             {% if certs_json.failed %}{{ list.append('Certificates') }}{% endif %}
-            {% if pods_json.failed %}{{ list.append('Pods') }}{% endif %}
+            {% if pods.failed %}{{ list.append('Pods') }}{% endif %}
             {{ list }}
