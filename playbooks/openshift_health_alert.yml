@@ -15,14 +15,16 @@
         host: "{{ smtp_host }}"
         port: "{{ smtp_port }}"
         secure: starttls
-        username: "{{ gmail_username }}"
-        password: "{{ gmail_app_password }}"
+        username: "{{ lookup('env', 'GMAIL_USERNAME') }}"
+        password: "{{ lookup('env', 'GMAIL_APP_PASSWORD') }}"
         to: "{{ email_to }}"
         from: "{{ email_from }}"
-        subject: "OpenShift Health Alert"
+        subject: "🚨 OpenShift Health Alert"
         body: |
           OpenShift Health Issue Detected
 
           Check  : {{ check | default('unknown') }}
           Status : {{ status | default('failed') }}
           Time   : {{ ansible_date_time.iso8601 }}
+
+          This alert was automatically triggered by Ansible EDA.
