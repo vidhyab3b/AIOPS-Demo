@@ -3,13 +3,18 @@
   hosts: localhost
 
   sources:
-    - ansible.eda.webhook:
+    - name: health_check_webhook
+      ansible.eda.http
+      parameters:
         port: 5000
 
   rules:
-    - name: CO degraded → trigger template
-      condition: event.payload.status == "failed"
+    - name: Trigger Email Alert on Failure
+      condition: event.status == "failed"
       action:
         run_job_template:
           name: "OpenShift Health Alert"
           organization: "Default"
+          extra_vars:
+            check: "{{ event.checks_failed }}"
+            status: "{{ event.status }}"
