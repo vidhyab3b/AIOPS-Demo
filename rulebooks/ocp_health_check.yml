@@ -1,13 +1,15 @@
 - name: OpenShift Health Monitor
   hosts: localhost
   sources:
-    - name: OpenShift CO/MCP/Node/Cert/Pods Check
-      ansible.eda.execution_queue:
-        playbook_path: playbooks/openshift_health_check.yml
+    - name: oc_health_check_job
+      ansible.eda.awx_event:
+        job_template: "OpenShift Health Check"  # Your playbook as a Job Template
+        organization: "Default"
+        event: "job_completed"  # Trigger when job completes
 
   rules:
-    - name: Trigger Alert on Failure
-      condition: event.status == "failed"
+    - name: Trigger Alert Only on Failure
+      condition: event.status == "failed"  # Only when the Job Template fails
       action:
         run_job_template:
           name: "OpenShift Health Alert"
