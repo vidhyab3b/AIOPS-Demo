@@ -1,0 +1,61 @@
+---
+- name: OpenShift Health Check
+  hosts: localhost
+  gather_facts: no
+  tasks:
+
+    - name: Check ClusterOperators
+      command: oc get co -o json
+      register: co_status
+      changed_when: false
+
+    - name: Fail if any ClusterOperator is degraded
+      fail:
+        msg: "ClusterOperator {{ item.metadata.name }} is degraded"
+      loop: "{{ co_status.stdout | from_json | json_query('items[*]') }}"
+      when: "'False' in [c.status for c in item.status.conditions if c.type=='Available']"
+
+    - name: Check MachineConfigPools
+      command: oc get mcp -o json
+      register: mcp_status
+      changed_when: false
+
+    - name: Fail if any MCP is degraded
+      fail:
+        msg: "MachineConfigPool {{ item.metadata.name }} is degraded"
+      loop: "{{ mcp_status.stdout | from_json | json_query('items[*]') }}"
+      when: "'False' in [c.status for c in item.status.conditions if c.type=='Updated']"
+
+    - name: Check Nodes
+      command: oc get nodes -o json
+      register: nodes_status
+      changed_when: false
+
+    - name: Fail if any Node is Not Ready or cordoned
+      fail:
+        msg: "Node {{ item.metadata.name }} is NotReady or cordoned"
+      loop: "{{ nodes_status.stdout | from_json | json_query('items[*]') }}"
+      when: >
+        (item.status.conditions | selectattr('type','equalto','Ready') | map(attribute='status') | list)[0] != 'True'
+        or item.spec.unschedulable | default(false)
+
+    - name: Check Certificates
+      command: oc get cert -A -o json
+      register: cert_status
+      changed_when: false
+
+    - name: Fail if any Certificate has status False
+      fail:
+        msg: "Certificate {{ item.metadata.name }} in namespace {{ item.metadata.namespace }} is not ready"
+      loop: "{{ cert_status.stdout | from_json | json_query('items[*]') }}"
+      when: "'False' in [c.status for c in item.status.conditions if c.type=='Ready']"
+
+    - name: Check Pods not running or crashing
+      shell: oc get pods -A | egrep -v "1/1|2/2|3/3|4/4|5/5|6/6|7/7|8/8|9/9|10/10|13/13" | egrep -v "Running|Completed"
+      register: pod_status
+      changed_when: false
+
+    - name: Fail if any pod is not running
+      fail:
+        msg: "Pods not running or crashing:\n{{ pod_status.stdout }}"
+      when: pod_status.stdout != ""
