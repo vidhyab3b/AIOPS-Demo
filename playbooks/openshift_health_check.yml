@@ -4,7 +4,7 @@ name: pod-failure-alert
 description: Alert when any pod is not running
 hosts: localhost
 vars:
-  email_template_name: "send-pod-alert-email"   # Name of your AAP template
+  email_template_name: "OpenShift Health Alert" 
 
 rules:
   - name: pod-not-running
