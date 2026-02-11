@@ -1,47 +1,23 @@
 ---
-- hosts: localhost
-  gather_facts: no
+---
+name: pod-failure-alert
+description: Alert when any pod is not running
+hosts: localhost
+vars:
+  email_template_name: "send-pod-alert-email"   # Name of your AAP template
 
-  vars:
-    eda_webhook_url: "http://eda-route:5000"   # Replace with your EDA URL
-
-  tasks:
-    - name: Check all pods in all namespaces
-      command: oc get pods -A -o json
-      register: pods_json
-      ignore_errors: yes
-
-    - name: Parse pod statuses safely
-      set_fact:
-        crash_pods: >-
-          {% set list = [] %}
-          {% if pods_json.stdout != "" %}
-            {% set pods = pods_json.stdout | from_json %}
-            {% for pod in pods.items %}
-              {% for cs in pod.status.containerStatuses | default([]) %}
-                {% if cs.state.waiting is defined and cs.state.waiting.reason in ['CrashLoopBackOff','Error'] %}
-                  {% do list.append(pod.metadata.namespace + '/' + pod.metadata.name) %}
-                {% endif %}
-                {% if cs.state.terminated is defined and cs.state.terminated.exitCode != 0 %}
-                  {% do list.append(pod.metadata.namespace + '/' + pod.metadata.name) %}
-                {% endif %}
-              {% endfor %}
-            {% endfor %}
-          {% endif %}
-          {{ list }}
-
-    - name: Fail if any crash pods detected
-      fail:
-        msg: "Detected crash pods: {{ crash_pods }}"
-      when: crash_pods | length > 0
-
-    - name: Notify EDA only if crash pods exist
-      when: crash_pods | length > 0
-      uri:
-        url: "{{ eda_webhook_url }}"
-        method: POST
-        body_format: json
-        body:
-          status: failed
-          check: pods
-          crash_pods: "{{ crash_pods }}"
+rules:
+  - name: pod-not-running
+    event: "k8s.pod.status"
+    match:
+      # Trigger when pod status is NOT Running
+      "{{ event.object.status.phase != 'Running' }}"
+    actions:
+      - name: trigger-email-template
+        ansible.builtin.include_role:
+          name: trigger-job-template
+        vars:
+          template_name: "{{ email_template_name }}"
+          namespace: "{{ event.object.metadata.namespace }}"
+          pod_name: "{{ event.object.metadata.name }}"
+          pod_status: "{{ event.object.status.phase }}"
