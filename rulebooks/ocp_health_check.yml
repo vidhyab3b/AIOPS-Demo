@@ -3,27 +3,18 @@ name: pod-failure-alert
 description: Trigger email alert for any pod not running in the cluster
 hosts: localhost
 vars:
-  email_template_name: "OpenShift Health Alert"  # Your AAP job template name
-  watch_namespace: "all"                         # Monitor all namespaces
+  email_template_name: "OpenShift Health Alert"  # Your AAP template name
 
 rules:
   - name: pod-not-running
-    # For Token Event Stream, we get generic events, not k8s.object.changed
     condition: >
-      event.status is defined and event.status != "Running"
+      event.body.status is defined and event.body.status != "Running"
     actions:
       - name: trigger-email-template
         ansible.builtin.include_role:
           name: trigger-job-template
         vars:
           template_name: "{{ email_template_name }}"
-          namespace: "{{ event.namespace | default('unknown') }}"
-          pod_name: "{{ event.pod_name | default('unknown') }}"
-          pod_status: "{{ event.status }}"
-          container_issues: >-
-            {{
-              event.container_statuses | default([])
-              | selectattr('state.waiting', 'defined')
-              | map('combine', [{'name': item.name, 'reason': item.state.waiting.reason, 'message': item.state.waiting.message} for item in event.container_statuses if item.state.waiting is defined])
-              | list
-            }}
+          namespace: "{{ event.body.namespace | default('unknown') }}"
+          pod_name: "{{ event.body.pod_name | default('unknown') }}"
+          pod_status: "{{ event.body.status }}"
