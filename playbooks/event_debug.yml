@@ -1,5 +1,8 @@
 - hosts: localhost
   gather_facts: no
+  vars:
+    # Fallback if not passed from rulebook
+    event: {}
   tasks:
     - name: Print incoming event payload
       ansible.builtin.debug:
