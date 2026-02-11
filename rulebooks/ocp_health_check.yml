@@ -3,33 +3,27 @@ name: pod-failure-alert
 description: Trigger email alert for any pod not running in the cluster
 hosts: localhost
 vars:
-  email_template_name: "OpenShift Health Alert"  # Your AAP template name
-  watch_namespace: "all"                   # Change to the namespace you want to monitor, or "all"
+  email_template_name: "OpenShift Health Alert"  # Your AAP job template name
+  watch_namespace: "all"                         # Monitor all namespaces
 
 rules:
   - name: pod-not-running
-    event: "k8s.object.changed"
-    match: >-
-      {{
-        event.object.kind == "Pod"
-        and (event.object.metadata.namespace == watch_namespace or watch_namespace == "all")
-        and event.object.status.phase != "Running"
-      }}
+    # For Token Event Stream, we get generic events, not k8s.object.changed
+    condition: >
+      event.status is defined and event.status != "Running"
     actions:
       - name: trigger-email-template
         ansible.builtin.include_role:
           name: trigger-job-template
         vars:
           template_name: "{{ email_template_name }}"
-          namespace: "{{ event.object.metadata.namespace }}"
-          pod_name: "{{ event.object.metadata.name }}"
-          pod_status: "{{ event.object.status.phase }}"
+          namespace: "{{ event.namespace | default('unknown') }}"
+          pod_name: "{{ event.pod_name | default('unknown') }}"
+          pod_status: "{{ event.status }}"
           container_issues: >-
             {{
-              event.object.status.containerStatuses
-              | default([])
+              event.container_statuses | default([])
               | selectattr('state.waiting', 'defined')
-              | map(attribute='state.waiting')
-              | map('combine', [{'name': item.name, 'reason': item.reason, 'message': item.message} for item in event.object.status.containerStatuses if item.state.waiting is defined])
+              | map('combine', [{'name': item.name, 'reason': item.state.waiting.reason, 'message': item.state.waiting.message} for item in event.container_statuses if item.state.waiting is defined])
               | list
             }}
