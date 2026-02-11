@@ -1,5 +1,5 @@
 ---
-- name: OpenShift Health Alert
+- name: OpenShift Pod Alert
   hosts: localhost
   gather_facts: no
 
@@ -10,7 +10,7 @@
     smtp_port: 587
 
   tasks:
-    - name: Send OpenShift health alert email
+    - name: Send OpenShift pod alert email
       mail:
         host: "{{ smtp_host }}"
         port: "{{ smtp_port }}"
@@ -19,12 +19,20 @@
         password: "{{ lookup('env', 'GMAIL_APP_PASSWORD') }}"
         to: "{{ email_to }}"
         from: "{{ email_from }}"
-        subject: "OpenShift Health Alert"
+        subject: "OpenShift Pod Alert: {{ pod_name }} in {{ namespace }} is {{ pod_status }}"
         body: |
-          OpenShift Health Issue Detected
+          OpenShift Pod Alert Detected
 
-          Check  : {{ check | default('unknown') }}
-          Status : {{ status | default('failed') }}
-          Time   : {{ ansible_date_time.iso8601 }}
+          Namespace  : {{ namespace | default('unknown') }}
+          Pod Name   : {{ pod_name | default('unknown') }}
+          Pod Status : {{ pod_status | default('unknown') }}
+          Time       : {{ ansible_date_time.iso8601 }}
+
+          {% if container_issues is defined and container_issues|length > 0 %}
+          Container Issues:
+          {% for c in container_issues %}
+            - Container: {{ c.name }}, Reason: {{ c.reason }}, Message: {{ c.message }}
+          {% endfor %}
+          {% endif %}
 
           This alert was automatically triggered by Ansible EDA.
