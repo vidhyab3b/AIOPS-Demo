@@ -4,10 +4,10 @@
   sources:
     - name: K8S Token Event Stream
       ansible.eda.token:
-        token: "my-secret-eda-token-123"   # Replace with your actual token
+        token: "my-secret-eda-token-123"
   rules:
     - name: log-all-events
-      condition: true   # Always true, logs all incoming events
+      condition: true
       action:
         run_job_template:
           name: "Print Event Payload"
