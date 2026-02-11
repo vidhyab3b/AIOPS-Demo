@@ -1,0 +1,6 @@
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Print incoming event payload
+      ansible.builtin.debug:
+        var: event
