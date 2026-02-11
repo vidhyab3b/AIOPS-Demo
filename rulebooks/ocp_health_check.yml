@@ -1,20 +1,19 @@
 ---
-name: pod-failure-alert
-description: Trigger email alert for any pod not running in the cluster
-hosts: localhost
-vars:
-  email_template_name: "OpenShift Health Alert"  # Your AAP template name
-
-rules:
-  - name: pod-not-running
-    condition: >
-      event.body.status is defined and event.body.status != "Running"
-    actions:
-      - name: trigger-email-template
-        ansible.builtin.include_role:
-          name: trigger-job-template
-        vars:
-          template_name: "{{ email_template_name }}"
-          namespace: "{{ event.body.namespace | default('unknown') }}"
-          pod_name: "{{ event.body.pod_name | default('unknown') }}"
-          pod_status: "{{ event.body.status }}"
+- name: Pod Failure Alert
+  hosts: localhost
+  sources:
+    - name: Token Event Stream
+      ansible.eda.token:
+        token: "my-secret-eda-token-123"  # or reference credential
+  rules:
+    - name: pod-not-running
+      condition: >
+        event.body.status is defined and event.body.status != "Running"
+      action:
+        run_job_template:
+          name: "OpenShift Health Alert"
+          organization: "Default"
+          extra_vars:
+            namespace: "{{ event.body.namespace | default('unknown') }}"
+            pod_name: "{{ event.body.pod_name | default('unknown') }}"
+            pod_status: "{{ event.body.status }}"
