@@ -1,20 +1,22 @@
 ---
-- name: OpenShift Health Monitor
-  hosts: localhost
+name: pod-failure-alert
+description: Alert when any pod is not running
+hosts: localhost
+vars:
+  email_template_name: "OpenShift Health Alert" 
 
-  sources:
-    - name: health_check_webhook
-      ansible.eda.http
-      parameters:
-        port: 5000
-
-  rules:
-    - name: Trigger Email Alert on Failure
-      condition: event.status == "failed"
-      action:
-        run_job_template:
-          name: "OpenShift Health Alert"
-          organization: "Default"
-          extra_vars:
-            check: "{{ event.checks_failed }}"
-            status: "{{ event.status }}"
+rules:
+  - name: pod-not-running
+    event: "k8s.pod.status"
+    match:
+      # Trigger when pod status is NOT Running
+      "{{ event.object.status.phase != 'Running' }}"
+    actions:
+      - name: trigger-email-template
+        ansible.builtin.include_role:
+          name: trigger-job-template
+        vars:
+          template_name: "{{ email_template_name }}"
+          namespace: "{{ event.object.metadata.namespace }}"
+          pod_name: "{{ event.object.metadata.name }}"
+          pod_status: "{{ event.object.status.phase }}"
