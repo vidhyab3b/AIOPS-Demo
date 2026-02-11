@@ -1,0 +1,12 @@
+---
+name: debug-token-event
+description: Just log the incoming event
+hosts: localhost
+
+rules:
+  - name: log-event
+    condition: true
+    actions:
+      - name: print-event
+        ansible.builtin.debug:
+          msg: "{{ event.body }}"
