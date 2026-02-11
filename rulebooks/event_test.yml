@@ -1,12 +1,13 @@
 ---
-name: debug-token-event
-description: Just log the incoming event
-hosts: localhost
-
-rules:
-  - name: log-event
-    condition: true
-    actions:
-      - name: print-event
+- name: Debug Token Event
+  hosts: localhost
+  sources:
+    - name: K8S Token Event Stream
+      ansible.eda.token:
+        token: "my-secret-eda-token-123"  # replace with your actual token
+  rules:
+    - name: log-all-events
+      condition: true   # always true, captures all events
+      action:
         ansible.builtin.debug:
           msg: "{{ event.body }}"
