@@ -1,16 +1,26 @@
 ---
-- name: Debug Token Event Stream
+- name: Capture OpenShift Events
   hosts: localhost
   sources:
-    - name: K8S Token Event Stream
-      ansible.eda.token:
+    - name: Listen for OpenShift Webhooks
+      ansible.eda.webhook:
+        port: 5000
         token: "my-secret-eda-token-123"
+
   rules:
-    - name: log-all-events
-      condition: true
+    - name: Respond to Failed Pods
+      # This condition assumes the payload contains K8S event metadata
+      condition: event.payload.reason == "Failed" and event.payload.kind == "Pod"
       action:
         run_job_template:
-          name: "Print Event Payload"
+          name: "Remediate Pod Failure"
           organization: "Default"
-          extra_vars:
-            event: "{{ event.body }}"
+          job_args:
+            extra_vars:
+              pod_name: "{{ event.payload.involvedObject.name }}"
+              namespace: "{{ event.payload.involvedObject.namespace }}"
+
+    - name: Log all other events
+      condition: event.payload.reason != "Failed"
+      action:
+        debug:
